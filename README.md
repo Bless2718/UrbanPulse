@@ -9,86 +9,59 @@ The first use case is urban road-accident risk. The platform is being developed 
 - **Frontend:** Next.js, TypeScript, Tailwind CSS
 - **Backend:** FastAPI, Python
 - **Database:** PostgreSQL + JSONB raw layer
-- **Data Engineering:** configurable ingestion, pipeline-run logging, Airflow-ready DAG, dbt-ready models
+- **Data Engineering:** Dockerized ingestion jobs, pipeline-run logging, Airflow-ready DAG, dbt-ready models
 - **Data Science:** ML workspace for feature engineering, training, evaluation and inference
 - **DevOps:** Docker Compose, GitHub Actions
 
-## Repository structure
-
-```text
-apps/
-  web/                Next.js + Tailwind dashboard
-  api/                FastAPI
-ingestion/            Source connectors
-pipelines/            Pipeline entry points
-airflow/dags/         Orchestration DAGs
-sql/                  PostgreSQL initialization
-dbt/                  Transformation project
-analytics/            Analysis work
-ml/                   Features/training/evaluation/inference
-docs/                 Architecture and source documentation
-data/                 Local raw/processed data (gitignored)
-```
-
-## Start PostgreSQL + app
+## Start PostgreSQL
 
 ```bash
-cp .env.example .env
-docker compose up --build
+docker compose up -d db
 ```
 
-If you created the Docker database before the warehouse SQL was added, reset the local development volume once:
+If you created the database before warehouse SQL changes:
 
 ```bash
 docker compose down -v
-docker compose up --build
+docker compose up -d db
 ```
 
-## Run ingestion locally
+## Run ingestion with Docker
 
-Create a Python environment from the repository root:
+This is the recommended workflow because it is reproducible across Windows, macOS and Linux.
+
+Weather:
 
 ```bash
-python -m venv .venv
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-
-pip install -r ingestion/requirements.txt
+docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source weather
 ```
 
-For IMD weather, the starter defaults to Chennai-Meenambakkam station `43279`:
+Accidents:
 
 ```bash
-python pipelines/run_ingestion.py --source weather
+docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source accidents
 ```
 
-For data.gov.in road-accident ingestion, add these values to `.env`:
+All sources:
+
+```bash
+docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source all
+```
+
+For road-accident ingestion, add your data.gov.in values to `.env`:
 
 ```env
 DATA_GOV_API_KEY=your_key
 DATA_GOV_ACCIDENT_RESOURCE_ID=your_resource_id
 ```
 
-Then run:
-
-```bash
-python pipelines/run_ingestion.py --source accidents
-```
-
-Or run both:
-
-```bash
-python pipelines/run_ingestion.py --source all
-```
-
-## Data model added in Phase 1
+## Data model
 
 - `raw.weather_observations`
 - `raw.accident_records`
 - `analytics.pipeline_runs`
 
-Every source payload is retained as JSONB for lineage and reprocessing, while frequently analyzed accident/weather fields are normalized into typed columns.
+Every source payload is retained as JSONB for lineage and reprocessing, while commonly analyzed fields are normalized into typed columns.
 
 ## Roadmap
 
@@ -98,12 +71,12 @@ Every source payload is retained as JSONB for lineage and reprocessing, while fr
 - [x] PostgreSQL
 - [x] Docker Compose
 - [x] GitHub Actions
+- [x] Dockerized ingestion runtime
 - [x] IMD weather ingestion connector
 - [x] data.gov.in accident ingestion connector
 - [x] Raw warehouse schema
-- [x] Pipeline observability table
-- [x] Airflow ingestion DAG starter
-- [ ] Choose and profile primary accident resource
+- [x] Pipeline observability
+- [ ] Choose/profile primary accident resource
 - [ ] dbt staging + analytics marts
 - [ ] Exploratory/geospatial analytics
 - [ ] Accident-risk feature engineering
@@ -111,5 +84,3 @@ Every source payload is retained as JSONB for lineage and reprocessing, while fr
 - [ ] SHAP explanations
 - [ ] Interactive map
 - [ ] Model/data monitoring
-
-See [docs/data-sources.md](docs/data-sources.md) for source design.

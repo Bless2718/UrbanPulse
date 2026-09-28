@@ -16,6 +16,22 @@ services:
       timeout: 5s
       retries: 10
 
+  ingestion:
+    build:
+      context: .
+      dockerfile: ingestion/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+pg8000://${POSTGRES_USER:-urbanpulse}:${POSTGRES_PASSWORD:-urbanpulse_dev}@db:5432/${POSTGRES_DB:-urbanpulse}
+      IMD_STATION_ID: ${IMD_STATION_ID:-43279}
+      IMD_CURRENT_WEATHER_URL: ${IMD_CURRENT_WEATHER_URL:-https://mausam.imd.gov.in/api/current_wx_api.php}
+      DATA_GOV_API_KEY: ${DATA_GOV_API_KEY:-}
+      DATA_GOV_ACCIDENT_RESOURCE_ID: ${DATA_GOV_ACCIDENT_RESOURCE_ID:-}
+      DATA_GOV_PAGE_SIZE: ${DATA_GOV_PAGE_SIZE:-1000}
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["jobs"]
+
   api:
     build:
       context: ./apps/api
