@@ -22,6 +22,12 @@ services:
       dockerfile: ingestion/Dockerfile
     environment:
       DATABASE_URL: postgresql+pg8000://${POSTGRES_USER:-urbanpulse}:${POSTGRES_PASSWORD:-urbanpulse_dev}@db:5432/${POSTGRES_DB:-urbanpulse}
+      WEATHER_PROVIDER: ${WEATHER_PROVIDER:-open-meteo}
+      OPEN_METEO_URL: ${OPEN_METEO_URL:-https://api.open-meteo.com/v1/forecast}
+      WEATHER_LATITUDE: ${WEATHER_LATITUDE:-13.0827}
+      WEATHER_LONGITUDE: ${WEATHER_LONGITUDE:-80.2707}
+      WEATHER_LOCATION_NAME: ${WEATHER_LOCATION_NAME:-Chennai}
+      WEATHER_STATION_ID: ${WEATHER_STATION_ID:-open-meteo-chennai}
       IMD_STATION_ID: ${IMD_STATION_ID:-43279}
       IMD_CURRENT_WEATHER_URL: ${IMD_CURRENT_WEATHER_URL:-https://mausam.imd.gov.in/api/current_wx_api.php}
       DATA_GOV_API_KEY: ${DATA_GOV_API_KEY:-}

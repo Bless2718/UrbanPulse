@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -9,7 +10,8 @@ sys.path.insert(0, str(PROJECT_ROOT / "ingestion"))
 
 from common import db_connection  # noqa: E402
 from accidents_data_gov import run as run_accidents  # noqa: E402
-from weather_imd import run as run_weather  # noqa: E402
+from weather_imd import run as run_imd_weather  # noqa: E402
+from weather_open_meteo import run as run_open_meteo_weather  # noqa: E402
 
 
 def log_start(pipeline_name: str) -> int:
@@ -63,6 +65,16 @@ def execute(name: str, fn) -> None:
         raise
 
 
+def run_weather() -> None:
+    provider = os.getenv("WEATHER_PROVIDER", "open-meteo").lower()
+    if provider == "imd":
+        execute("imd_current_weather", run_imd_weather)
+    elif provider == "open-meteo":
+        execute("open_meteo_current_weather", run_open_meteo_weather)
+    else:
+        raise ValueError(f"Unsupported WEATHER_PROVIDER: {provider}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run UrbanPulse ingestion pipelines")
     parser.add_argument(
@@ -73,7 +85,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.source in ("weather", "all"):
-        execute("imd_current_weather", run_weather)
+        run_weather()
     if args.source in ("accidents", "all"):
         execute("data_gov_road_accidents", run_accidents)
 
