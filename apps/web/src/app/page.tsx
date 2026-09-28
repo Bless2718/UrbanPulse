@@ -3,16 +3,34 @@ import {
   AlertTriangle,
   BrainCircuit,
   Database,
+  Droplets,
   MapPinned,
+  Thermometer,
   Workflow,
 } from "lucide-react";
 
-const metrics = [
-  { label: "City Risk Score", value: "82", suffix: "/100", hint: "Demo data" },
-  { label: "High-Risk Zones", value: "7", suffix: "", hint: "Demo data" },
-  { label: "Predicted Risk", value: "76", suffix: "%", hint: "Next hour" },
-  { label: "Pipeline Status", value: "Healthy", suffix: "", hint: "Starter" },
-];
+type Weather = {
+  station_name: string | null;
+  temperature_c: number | null;
+  humidity_pct: number | null;
+  rainfall_mm: number | null;
+  weather_description: string | null;
+  ingested_at: string | null;
+};
+
+async function getWeather(): Promise<Weather | null> {
+  const apiUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+  try {
+    const response = await fetch(`${apiUrl}/api/v1/weather/current`, {
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
 
 const riskZones = [
   { name: "Zone A", score: 91, level: "Critical" },
@@ -24,7 +42,7 @@ const riskZones = [
 const pillars = [
   {
     title: "Data Engineering",
-    description: "Automated ingestion, PostgreSQL, dbt-ready models, orchestration and data quality.",
+    description: "Dockerized ingestion, PostgreSQL, dbt transformations, orchestration and data quality.",
     icon: Workflow,
   },
   {
@@ -39,7 +57,26 @@ const pillars = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const weather = await getWeather();
+
+  const metrics = [
+    { label: "City Risk Score", value: "82", suffix: "/100", hint: "Demo model" },
+    { label: "High-Risk Zones", value: "7", suffix: "", hint: "Demo model" },
+    {
+      label: "Temperature",
+      value: weather?.temperature_c != null ? weather.temperature_c.toFixed(1) : "—",
+      suffix: "°C",
+      hint: weather?.station_name ?? "Awaiting weather data",
+    },
+    {
+      label: "Humidity",
+      value: weather?.humidity_pct != null ? weather.humidity_pct.toFixed(0) : "—",
+      suffix: "%",
+      hint: "Live warehouse data",
+    },
+  ];
+
   return (
     <main className="min-h-screen">
       <section className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
@@ -53,12 +90,12 @@ export default function Home() {
               Urban<span className="text-cyan-400">Pulse</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-              A production-oriented data platform for identifying, explaining, and predicting urban accident risk.
+              An end-to-end data platform for identifying, explaining, and predicting urban accident risk.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-2 text-sm text-emerald-300">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Platform starter online
+            Live data pipeline connected
           </div>
         </header>
 
@@ -75,7 +112,7 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
             <div className="mb-6 flex items-center justify-between">
               <div>
@@ -84,7 +121,6 @@ export default function Home() {
               </div>
               <AlertTriangle className="h-5 w-5 text-amber-400" />
             </div>
-
             <div className="space-y-5">
               {riskZones.map((zone) => (
                 <div key={zone.name}>
@@ -102,18 +138,22 @@ export default function Home() {
 
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
             <Database className="h-6 w-6 text-cyan-400" />
-            <p className="mt-5 text-sm text-slate-500">Current milestone</p>
-            <h2 className="mt-1 text-xl font-semibold text-white">Foundation</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              Clean production structure first; real datasets, analytics and model training come next.
-            </p>
-            <div className="mt-6 space-y-3 text-sm">
-              {["Next.js + Tailwind", "FastAPI", "PostgreSQL", "Docker Compose", "GitHub Actions"].map((item) => (
-                <div key={item} className="flex items-center gap-3 text-slate-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  {item}
-                </div>
-              ))}
+            <p className="mt-5 text-sm text-slate-500">Current weather</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">
+              {weather?.station_name ?? "No transformed data yet"}
+            </h2>
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2 text-slate-400"><Thermometer className="h-4 w-4" />Temperature</span>
+                <span className="font-medium text-slate-200">{weather?.temperature_c ?? "—"} °C</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2 text-slate-400"><Droplets className="h-4 w-4" />Rainfall</span>
+                <span className="font-medium text-slate-200">{weather?.rainfall_mm ?? "—"} mm</span>
+              </div>
+              <p className="border-t border-slate-800 pt-4 text-xs leading-5 text-slate-500">
+                {weather?.weather_description ?? "Run ingestion and dbt to populate this card."}
+              </p>
             </div>
           </article>
         </section>

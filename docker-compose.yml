@@ -38,11 +38,27 @@ services:
         condition: service_healthy
     profiles: ["jobs"]
 
+  transform:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.9.latest
+    working_dir: /usr/app
+    volumes:
+      - ./dbt:/usr/app
+    environment:
+      DBT_PROFILES_DIR: /usr/app
+      DBT_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-urbanpulse}
+      POSTGRES_USER: ${POSTGRES_USER:-urbanpulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-urbanpulse_dev}
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["jobs"]
+
   api:
     build:
       context: ./apps/api
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+pg8000://urbanpulse:urbanpulse_dev@db:5432/urbanpulse}
+      DATABASE_URL: postgresql+pg8000://${POSTGRES_USER:-urbanpulse}:${POSTGRES_PASSWORD:-urbanpulse_dev}@db:5432/${POSTGRES_DB:-urbanpulse}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     ports:
       - "8000:8000"
@@ -55,6 +71,7 @@ services:
       context: ./apps/web
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      API_INTERNAL_URL: http://api:8000
     ports:
       - "3000:3000"
     depends_on:

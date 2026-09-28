@@ -1,0 +1,12 @@
+urbanpulse:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'db') }}"
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER', 'urbanpulse') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'urbanpulse_dev') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'urbanpulse') }}"
+      schema: analytics
+      threads: 4
