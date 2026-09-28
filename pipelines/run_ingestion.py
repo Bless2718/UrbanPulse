@@ -14,7 +14,8 @@ from weather_imd import run as run_weather  # noqa: E402
 
 def log_start(pipeline_name: str) -> int:
     with db_connection() as conn:
-        with conn.cursor() as cur:
+        cur = conn.cursor()
+        try:
             cur.execute(
                 """
                 INSERT INTO analytics.pipeline_runs (pipeline_name, status)
@@ -24,13 +25,16 @@ def log_start(pipeline_name: str) -> int:
                 (pipeline_name,),
             )
             run_id = cur.fetchone()[0]
-        conn.commit()
+            conn.commit()
+        finally:
+            cur.close()
     return int(run_id)
 
 
 def log_finish(run_id: int, status: str, records: int = 0, error: str | None = None) -> None:
     with db_connection() as conn:
-        with conn.cursor() as cur:
+        cur = conn.cursor()
+        try:
             cur.execute(
                 """
                 UPDATE analytics.pipeline_runs
@@ -42,7 +46,9 @@ def log_finish(run_id: int, status: str, records: int = 0, error: str | None = N
                 """,
                 (status, records, error, run_id),
             )
-        conn.commit()
+            conn.commit()
+        finally:
+            cur.close()
 
 
 def execute(name: str, fn) -> None:
