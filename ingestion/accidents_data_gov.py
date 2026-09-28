@@ -102,7 +102,8 @@ def load_records(records: list[dict[str, Any]], resource_id: str = RESOURCE_ID) 
         return 0
 
     with db_connection() as conn:
-        with conn.cursor() as cur:
+        cur = conn.cursor()
+        try:
             cur.executemany(
                 """
                 INSERT INTO raw.accident_records (
@@ -120,7 +121,9 @@ def load_records(records: list[dict[str, Any]], resource_id: str = RESOURCE_ID) 
                 """,
                 rows,
             )
-        conn.commit()
+            conn.commit()
+        finally:
+            cur.close()
 
     return len(rows)
 
