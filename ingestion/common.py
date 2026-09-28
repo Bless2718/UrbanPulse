@@ -5,22 +5,37 @@ import os
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterator
+from urllib.parse import unquote, urlparse
 
-import psycopg
+import pg8000.dbapi
 from dotenv import load_dotenv
 
 load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://urbanpulse:urbanpulse_dev@localhost:5432/urbanpulse",
+    "postgresql+pg8000://urbanpulse:urbanpulse_dev@localhost:5432/urbanpulse",
 )
 
 
+def _parse_database_url(url: str) -> dict[str, Any]:
+    parsed = urlparse(url)
+    return {
+        "user": unquote(parsed.username or ""),
+        "password": unquote(parsed.password or ""),
+        "host": parsed.hostname or "localhost",
+        "port": parsed.port or 5432,
+        "database": (parsed.path or "/urbanpulse").lstrip("/"),
+    }
+
+
 @contextmanager
-def db_connection() -> Iterator[psycopg.Connection]:
-    with psycopg.connect(DATABASE_URL) as conn:
+def db_connection() -> Iterator[pg8000.dbapi.Connection]:
+    conn = pg8000.dbapi.connect(**_parse_database_url(DATABASE_URL))
+    try:
         yield conn
+    finally:
+        conn.close()
 
 
 def first_value(payload: dict[str, Any], aliases: list[str]) -> Any:

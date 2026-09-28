@@ -20,7 +20,7 @@ services:
     build:
       context: ./apps/api
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://urbanpulse:urbanpulse_dev@db:5432/urbanpulse}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+pg8000://urbanpulse:urbanpulse_dev@db:5432/urbanpulse}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     ports:
       - "8000:8000"
