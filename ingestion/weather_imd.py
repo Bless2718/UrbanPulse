@@ -54,7 +54,8 @@ def load_weather(payload: dict[str, Any], station_id: str = STATION_ID) -> int:
     )
 
     with db_connection() as conn:
-        with conn.cursor() as cur:
+        cur = conn.cursor()
+        try:
             cur.execute(
                 """
                 INSERT INTO raw.weather_observations (
@@ -80,7 +81,9 @@ def load_weather(payload: dict[str, Any], station_id: str = STATION_ID) -> int:
                 ),
             )
             inserted_id = cur.fetchone()[0]
-        conn.commit()
+            conn.commit()
+        finally:
+            cur.close()
     return int(inserted_id)
 
 
