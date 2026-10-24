@@ -56,9 +56,6 @@ function loadLeaflet(): Promise<LeafletGlobal> {
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = LEAFLET_CSS;
-      link.integrity =
-        "sha256-p4NxAoJBhIINfQ3yn5BqWnI6hGZVhA8Q4D7u9k4b7w4=";
-      link.crossOrigin = "";
       document.head.appendChild(link);
     }
 
@@ -67,18 +64,13 @@ function loadLeaflet(): Promise<LeafletGlobal> {
     );
 
     if (existing) {
-      existing.addEventListener("load", () => {
-        if (window.L) resolve(window.L);
-      });
-      existing.addEventListener("error", () =>
-        reject(new Error("Leaflet failed to load"))
-      );
+      existing.addEventListener("load", () => window.L && resolve(window.L));
+      existing.addEventListener("error", () => reject(new Error("Leaflet failed to load")));
       return;
     }
 
     const script = document.createElement("script");
     script.src = LEAFLET_JS;
-    script.crossOrigin = "";
     script.onload = () => {
       if (window.L) resolve(window.L);
       else reject(new Error("Leaflet loaded without global API"));
@@ -115,7 +107,7 @@ export default function AccidentMap({ locations }: Props) {
 
         const map = L.map(containerRef.current, {
           zoomControl: true,
-          scrollWheelZoom: false,
+          scrollWheelZoom: true,
         });
         mapRef.current = map;
 
@@ -124,11 +116,7 @@ export default function AccidentMap({ locations }: Props) {
           attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
 
-        const maxTotal = Math.max(
-          ...locations.map((location) => location.total_accidents),
-          1
-        );
-
+        const maxTotal = Math.max(...locations.map((location) => location.total_accidents), 1);
         const points: Array<[number, number]> = [];
 
         locations.forEach((location) => {
@@ -138,46 +126,42 @@ export default function AccidentMap({ locations }: Props) {
 
           points.push([lat, lng]);
 
-          const radius =
-            5 + Math.sqrt(location.total_accidents / maxTotal) * 18;
-
+          const radius = 6 + Math.sqrt(location.total_accidents / maxTotal) * 18;
           const marker = L.circleMarker([lat, lng], {
             radius,
-            color: "#22d3ee",
+            color: "#67e8f9",
             weight: 1.5,
             fillColor: "#06b6d4",
-            fillOpacity: 0.55,
+            fillOpacity: 0.48,
           }).addTo(map);
 
           const change =
             location.total_2020 > 0
-              ? ((location.total_2021 - location.total_2020) /
-                  location.total_2020) *
-                100
+              ? ((location.total_2021 - location.total_2020) / location.total_2020) * 100
               : 0;
 
           marker.bindPopup(`
-            <div style="min-width:190px;font-family:system-ui,sans-serif">
-              <strong style="font-size:14px">${escapeHtml(location.district)}</strong>
-              <div style="margin-top:8px">2020: ${location.total_2020.toLocaleString("en-IN")}</div>
-              <div>2021: ${location.total_2021.toLocaleString("en-IN")}</div>
-              <div>Total: <strong>${location.total_accidents.toLocaleString("en-IN")}</strong></div>
-              <div style="margin-top:6px">2021 change: ${change >= 0 ? "+" : ""}${change.toFixed(1)}%</div>
+            <div style="min-width:210px;font-family:Inter,system-ui,sans-serif">
+              <strong style="font-size:15px">${escapeHtml(location.district)}</strong>
+              <div style="margin-top:10px;color:#94a3b8">2020 accidents</div>
+              <div style="font-size:16px;font-weight:700">${location.total_2020.toLocaleString("en-IN")}</div>
+              <div style="margin-top:6px;color:#94a3b8">2021 accidents</div>
+              <div style="font-size:16px;font-weight:700">${location.total_2021.toLocaleString("en-IN")}</div>
+              <div style="margin-top:8px;color:#22d3ee;font-weight:700">Total ${location.total_accidents.toLocaleString("en-IN")}</div>
+              <div style="margin-top:6px;color:#cbd5e1">2021 change: ${change >= 0 ? "+" : ""}${change.toFixed(1)}%</div>
             </div>
           `);
         });
 
         if (points.length > 0) {
           map.fitBounds(L.latLngBounds(points), {
-            padding: [28, 28],
+            padding: [36, 36],
             maxZoom: 8,
           });
         }
       })
       .catch(() => {
-        if (!cancelled) {
-          setError("The interactive map could not be loaded.");
-        }
+        if (!cancelled) setError("The interactive map could not be loaded.");
       });
 
     return () => {
@@ -189,25 +173,25 @@ export default function AccidentMap({ locations }: Props) {
 
   if (locations.length === 0) {
     return (
-      <div className="flex h-[480px] items-center justify-center text-sm text-slate-500">
-        Run district ingestion and dbt build to populate the map.
+      <div className="flex h-[620px] items-center justify-center rounded-3xl border border-white/10 bg-slate-950 text-sm text-slate-500">
+        No validated location data available.
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-[480px] items-center justify-center text-sm text-rose-300">
+      <div className="flex h-[620px] items-center justify-center rounded-3xl border border-rose-400/20 bg-rose-400/5 text-sm text-rose-300">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      <div ref={containerRef} className="h-[480px] w-full bg-slate-950" />
-      <div className="pointer-events-none absolute left-4 top-4 z-[500] rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-2 text-xs text-slate-300 shadow-lg">
-        Larger circles = more accidents
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-cyan-950/20">
+      <div ref={containerRef} className="h-[620px] w-full" />
+      <div className="pointer-events-none absolute left-5 top-5 z-[500] rounded-full border border-white/10 bg-slate-950/90 px-4 py-2 text-xs font-medium text-slate-200 backdrop-blur">
+        Marker size = combined 2020–2021 accidents
       </div>
     </div>
   );
