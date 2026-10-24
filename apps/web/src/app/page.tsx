@@ -35,6 +35,15 @@ type AccidentTrend = {
   total_accidents: number;
 };
 
+type AccidentLocation = {
+  district: string;
+  total_2020: number;
+  total_2021: number;
+  total_accidents: number;
+  latitude: number;
+  longitude: number;
+};
+
 type AccidentForecast = {
   forecast_year: number;
   predicted_accidents: number;
@@ -79,14 +88,16 @@ const pillars = [
 ];
 
 export default async function Home() {
-  const [weather, accidents, trend, forecast] = await Promise.all([
+  const [weather, accidents, trend, forecast, locations] = await Promise.all([
     fetchJson<Weather>("/api/v1/weather/current"),
     fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
     fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
     fetchJson<AccidentForecast>("/api/v1/accidents/forecast"),
+    fetchJson<AccidentLocation[]>("/api/v1/accidents/locations"),
   ]);
 
   const recentTrend = (trend ?? []).slice(-6);
+  const topLocations = (locations ?? []).slice(0, 5);
   const maxAccidents = Math.max(...recentTrend.map((row) => row.total_accidents), 1);
 
   const metrics = [
@@ -256,6 +267,28 @@ export default async function Home() {
               forecast as a baseline experiment, not a production prediction.
             </p>
           </article>
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Geospatial expansion</p>
+              <h2 className="mt-1 text-xl font-semibold text-white">Tamil Nadu district/city accident layer</h2>
+            </div>
+            <MapPinned className="h-5 w-5 text-cyan-400" />
+          </div>
+          <p className="mb-5 text-sm leading-6 text-slate-400">
+            This interim layer uses district/city centroid coordinates with 2020-2021 accident totals. It is not an individual crash-point dataset. Invalid coordinates are excluded automatically.
+          </p>
+          <div className="grid gap-3 md:grid-cols-5">
+            {topLocations.map((location) => (
+              <div key={location.district} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                <p className="text-sm font-medium text-white">{location.district}</p>
+                <p className="mt-2 text-2xl font-semibold text-cyan-400">{location.total_accidents.toLocaleString("en-IN")}</p>
+                <p className="mt-1 text-xs text-slate-500">2020 + 2021 accidents</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">

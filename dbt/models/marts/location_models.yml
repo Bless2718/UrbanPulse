@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_accident_district
+    columns:
+      - name: accident_district_id
+        tests: [not_null, unique]
+      - name: district
+        tests: [not_null, unique]
+
+  - name: accident_location_metrics
+    columns:
+      - name: district
+        tests: [not_null, unique]
+      - name: total_accidents
+        tests: [not_null]

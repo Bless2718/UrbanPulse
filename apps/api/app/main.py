@@ -7,7 +7,7 @@ from app.database import engine
 
 app = FastAPI(
     title="UrbanPulse API",
-    version="0.4.0",
+    version="0.5.0",
     description="Backend API for UrbanPulse urban risk intelligence.",
 )
 
@@ -152,3 +152,47 @@ def accident_forecast() -> dict:
     if result.get("generated_at") is not None:
         result["generated_at"] = result["generated_at"].isoformat()
     return result
+
+
+@app.get("/api/v1/accidents/locations")
+def accident_locations() -> list[dict]:
+    query = text(
+        """
+        SELECT district, total_2020, total_2021, total_accidents,
+               latitude, longitude, coordinate_valid
+        FROM analytics.accident_location_metrics
+        WHERE coordinate_valid = true
+        ORDER BY total_accidents DESC, district
+        """
+    )
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(query).mappings().all()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Location analytics are unavailable. Run district ingestion and dbt build first.",
+        ) from exc
+    return [dict(row) for row in rows]
+
+
+@app.get("/api/v1/accidents/location-quality")
+def accident_location_quality() -> dict:
+    query = text(
+        """
+        SELECT
+            count(*) as total_locations,
+            count(*) filter (where coordinate_valid) as valid_coordinates,
+            count(*) filter (where not coordinate_valid) as invalid_coordinates
+        FROM analytics.accident_location_metrics
+        """
+    )
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Location quality summary is unavailable. Run district ingestion and dbt build first.",
+        ) from exc
+    return dict(row or {})

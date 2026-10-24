@@ -6,6 +6,7 @@ sources:
     tables:
       - name: weather_observations
       - name: accident_yearly_summary
+      - name: accident_district_summary
 
 models:
   - name: stg_weather_observations
