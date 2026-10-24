@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: accident_ml_features
+    description: "Time-ordered accident features for baseline forecasting and model evaluation."
+    columns:
+      - name: year
+        tests: [not_null, unique]
+      - name: target_total_accidents
+        tests: [not_null]
+
+  - name: accident_eda_summary
+    description: "Portfolio-friendly summary of annual accident history and the 2023 structural-break candidate."
+    columns:
+      - name: start_year
+        tests: [not_null]
+      - name: end_year
+        tests: [not_null]

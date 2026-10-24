@@ -7,7 +7,7 @@ from app.database import engine
 
 app = FastAPI(
     title="UrbanPulse API",
-    version="0.3.0",
+    version="0.4.0",
     description="Backend API for UrbanPulse urban risk intelligence.",
 )
 
@@ -107,3 +107,48 @@ def accident_trend() -> list[dict]:
             detail="Accident analytics model is unavailable. Run accident ingestion and dbt build first.",
         ) from exc
     return [dict(row) for row in rows]
+
+
+@app.get("/api/v1/accidents/eda")
+def accident_eda() -> dict:
+    query = text("SELECT * FROM analytics.accident_eda_summary LIMIT 1")
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="EDA summary is unavailable. Run dbt build first.",
+        ) from exc
+    if row is None:
+        raise HTTPException(status_code=404, detail="No EDA summary available")
+    return dict(row)
+
+
+@app.get("/api/v1/accidents/forecast")
+def accident_forecast() -> dict:
+    query = text(
+        """
+        SELECT forecast_year, predicted_accidents, model_name,
+               validation_mae, validation_rmse, validation_mape_pct,
+               training_end_year, generated_at
+        FROM analytics.accident_forecasts
+        ORDER BY forecast_year DESC
+        LIMIT 1
+        """
+    )
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Forecast is unavailable. Run the ML baseline job first.",
+        ) from exc
+    if row is None:
+        raise HTTPException(status_code=404, detail="No accident forecast available")
+
+    result = dict(row)
+    if result.get("generated_at") is not None:
+        result["generated_at"] = result["generated_at"].isoformat()
+    return result

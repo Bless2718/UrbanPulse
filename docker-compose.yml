@@ -55,6 +55,21 @@ services:
         condition: service_healthy
     profiles: ["jobs"]
 
+  ml:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    working_dir: /app
+    volumes:
+      - ./ml:/app/ml
+    environment:
+      DATABASE_URL: postgresql+pg8000://${POSTGRES_USER:-urbanpulse}:${POSTGRES_PASSWORD:-urbanpulse_dev}@db:5432/${POSTGRES_DB:-urbanpulse}
+      ML_BACKTEST_YEARS: ${ML_BACKTEST_YEARS:-5}
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["jobs"]
+
   api:
     build:
       context: ./apps/api

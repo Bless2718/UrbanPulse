@@ -22,13 +22,10 @@ type AccidentSummary = {
   fatal_accidents: number;
   fatal_killed: number;
   grievous_injury_accidents: number;
-  grievous_injury_injured: number;
   minor_injury_accidents: number;
-  minor_injury_injured: number;
   non_injury_accidents: number;
   total_accidents: number;
   total_persons_involved: number;
-  fatal_accident_share_pct: number | null;
   fatalities_per_100_accidents: number | null;
   yoy_accident_change_pct: number | null;
 };
@@ -36,10 +33,16 @@ type AccidentSummary = {
 type AccidentTrend = {
   year: number;
   total_accidents: number;
-  fatal_accidents: number;
-  fatal_killed: number;
-  total_persons_involved: number;
-  yoy_accident_change_pct: number | null;
+};
+
+type AccidentForecast = {
+  forecast_year: number;
+  predicted_accidents: number;
+  model_name: string;
+  validation_mae: number;
+  validation_rmse: number;
+  validation_mape_pct: number;
+  training_end_year: number;
 };
 
 const apiUrl =
@@ -65,21 +68,22 @@ const pillars = [
   },
   {
     title: "Data Analytics",
-    description: "Yearly accident trends, severity mix, fatality indicators and operational metrics.",
+    description: "Yearly accident trends, severity mix, rolling features and structural-break diagnostics.",
     icon: Activity,
   },
   {
     title: "Data Science",
-    description: "The next phase adds forecasting and risk features after the analytics baseline is validated.",
+    description: "Time-aware baseline backtesting compares persistence, rolling-average and linear-regression forecasts.",
     icon: BrainCircuit,
   },
 ];
 
 export default async function Home() {
-  const [weather, accidents, trend] = await Promise.all([
+  const [weather, accidents, trend, forecast] = await Promise.all([
     fetchJson<Weather>("/api/v1/weather/current"),
     fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
     fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
+    fetchJson<AccidentForecast>("/api/v1/accidents/forecast"),
   ]);
 
   const recentTrend = (trend ?? []).slice(-6);
@@ -89,13 +93,11 @@ export default async function Home() {
     {
       label: "Latest Year",
       value: accidents?.year?.toString() ?? "—",
-      suffix: "",
-      hint: "Accident dataset",
+      hint: "Observed accident data",
     },
     {
       label: "Total Accidents",
       value: accidents?.total_accidents?.toLocaleString("en-IN") ?? "—",
-      suffix: "",
       hint:
         accidents?.yoy_accident_change_pct != null
           ? `${accidents.yoy_accident_change_pct > 0 ? "+" : ""}${accidents.yoy_accident_change_pct}% YoY`
@@ -104,17 +106,15 @@ export default async function Home() {
     {
       label: "Fatalities",
       value: accidents?.fatal_killed?.toLocaleString("en-IN") ?? "—",
-      suffix: "",
       hint:
         accidents?.fatalities_per_100_accidents != null
           ? `${accidents.fatalities_per_100_accidents} per 100 accidents`
           : "Fatality indicator",
     },
     {
-      label: "Persons Involved",
-      value: accidents?.total_persons_involved?.toLocaleString("en-IN") ?? "—",
-      suffix: "",
-      hint: "Latest annual total",
+      label: forecast ? `${forecast.forecast_year} Forecast` : "Baseline Forecast",
+      value: forecast?.predicted_accidents?.toLocaleString("en-IN") ?? "—",
+      hint: forecast ? `${forecast.model_name} · MAE ${Math.round(forecast.validation_mae)}` : "Run the ML job",
     },
   ];
 
@@ -131,7 +131,7 @@ export default async function Home() {
               Urban<span className="text-cyan-400">Pulse</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-              An end-to-end data platform combining accident analytics, weather ingestion, transformation and risk modeling.
+              An end-to-end data platform combining accident analytics, weather ingestion, feature engineering and forecasting.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-2 text-sm text-emerald-300">
@@ -144,10 +144,7 @@ export default async function Home() {
           {metrics.map((metric) => (
             <article key={metric.label} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur">
               <p className="text-sm text-slate-500">{metric.label}</p>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-semibold text-white">{metric.value}</span>
-                <span className="text-sm text-slate-500">{metric.suffix}</span>
-              </div>
+              <div className="mt-2 text-3xl font-semibold text-white">{metric.value}</div>
               <p className="mt-3 text-xs text-cyan-400">{metric.hint}</p>
             </article>
           ))}
@@ -212,7 +209,7 @@ export default async function Home() {
           </article>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.65fr_1.35fr]">
+        <section className="mt-8 grid gap-6 lg:grid-cols-3">
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
             <p className="text-sm text-slate-500">Current weather</p>
             <h2 className="mt-1 text-xl font-semibold text-white">{weather?.station_name ?? "No weather data"}</h2>
@@ -233,12 +230,30 @@ export default async function Home() {
           </article>
 
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
-            <p className="text-sm text-slate-500">Data scope</p>
-            <h2 className="mt-1 text-xl font-semibold text-white">1998–2025 annual accident history</h2>
+            <p className="text-sm text-slate-500">Forecast validation</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">{forecast?.model_name ?? "Not trained yet"}</h2>
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">MAE</span>
+                <span className="font-medium text-slate-200">{forecast ? Math.round(forecast.validation_mae).toLocaleString("en-IN") : "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">RMSE</span>
+                <span className="font-medium text-slate-200">{forecast ? Math.round(forecast.validation_rmse).toLocaleString("en-IN") : "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">MAPE</span>
+                <span className="font-medium text-slate-200">{forecast ? `${forecast.validation_mape_pct}%` : "—"}</span>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-6">
+            <p className="text-sm text-amber-300">Model caveat</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">2023 structural break</h2>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              The current accident source is annual aggregate data. It supports trend, severity and forecasting work,
-              but it does not contain district, road, latitude or longitude fields. Geographic hotspot claims are therefore
-              intentionally excluded until a location-level source is added.
+              Accident totals fall sharply in 2023. UrbanPulse flags this as a structural-break candidate and treats the
+              forecast as a baseline experiment, not a production prediction.
             </p>
           </article>
         </section>
