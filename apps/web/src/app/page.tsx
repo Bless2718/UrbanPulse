@@ -1,3 +1,5 @@
+import AccidentMap from "@/components/AccidentMap";
+
 import {
   Activity,
   BrainCircuit,
@@ -269,22 +271,30 @@ export default async function Home() {
           </article>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">Geospatial expansion</p>
-              <h2 className="mt-1 text-xl font-semibold text-white">Tamil Nadu district/city accident layer</h2>
+        <section className="mt-8 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60">
+          <div className="border-b border-slate-800 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Geospatial expansion</p>
+                <h2 className="mt-1 text-xl font-semibold text-white">Tamil Nadu accident map</h2>
+              </div>
+              <MapPinned className="h-5 w-5 text-cyan-400" />
             </div>
-            <MapPinned className="h-5 w-5 text-cyan-400" />
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">
+              Interactive district/city centroid map using validated 2020-2021 accident coordinates.
+              Marker size represents combined accident totals. These markers are area centroids, not individual crash points.
+            </p>
           </div>
-          <p className="mb-5 text-sm leading-6 text-slate-400">
-            This interim layer uses district/city centroid coordinates with 2020-2021 accident totals. It is not an individual crash-point dataset. Invalid coordinates are excluded automatically.
-          </p>
-          <div className="grid gap-3 md:grid-cols-5">
+
+          <AccidentMap locations={locations ?? []} />
+
+          <div className="grid gap-3 border-t border-slate-800 p-6 md:grid-cols-5">
             {topLocations.map((location) => (
               <div key={location.district} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
                 <p className="text-sm font-medium text-white">{location.district}</p>
-                <p className="mt-2 text-2xl font-semibold text-cyan-400">{location.total_accidents.toLocaleString("en-IN")}</p>
+                <p className="mt-2 text-2xl font-semibold text-cyan-400">
+                  {location.total_accidents.toLocaleString("en-IN")}
+                </p>
                 <p className="mt-1 text-xs text-slate-500">2020 + 2021 accidents</p>
               </div>
             ))}

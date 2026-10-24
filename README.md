@@ -125,3 +125,15 @@ The 2023 total is dramatically lower than 2022. UrbanPulse explicitly flags 2023
 - [ ] Geographic hotspot analytics
 - [ ] Richer temporal / external features
 - [ ] Production model monitoring
+
+
+## Interactive accident map
+
+After loading the district/city dataset and running dbt, the dashboard renders an interactive Leaflet + OpenStreetMap view from `/api/v1/accidents/locations`.
+
+- marker size is proportional to combined 2020-2021 accidents
+- popups show 2020, 2021, combined total and percentage change
+- only coordinates that pass the Tamil Nadu geographic validation are exposed
+- points represent district/city centroids, not individual crash locations
+
+The map intentionally avoids labeling centroid values as crash hotspots.
