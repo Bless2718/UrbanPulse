@@ -1,11 +1,11 @@
 import {
   Activity,
-  AlertTriangle,
   BrainCircuit,
   Database,
   Droplets,
   MapPinned,
   Thermometer,
+  TrendingUp,
   Workflow,
 } from "lucide-react";
 
@@ -15,16 +15,41 @@ type Weather = {
   humidity_pct: number | null;
   rainfall_mm: number | null;
   weather_description: string | null;
-  ingested_at: string | null;
 };
 
-async function getWeather(): Promise<Weather | null> {
-  const apiUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+type AccidentSummary = {
+  year: number;
+  fatal_accidents: number;
+  fatal_killed: number;
+  grievous_injury_accidents: number;
+  grievous_injury_injured: number;
+  minor_injury_accidents: number;
+  minor_injury_injured: number;
+  non_injury_accidents: number;
+  total_accidents: number;
+  total_persons_involved: number;
+  fatal_accident_share_pct: number | null;
+  fatalities_per_100_accidents: number | null;
+  yoy_accident_change_pct: number | null;
+};
 
+type AccidentTrend = {
+  year: number;
+  total_accidents: number;
+  fatal_accidents: number;
+  fatal_killed: number;
+  total_persons_involved: number;
+  yoy_accident_change_pct: number | null;
+};
+
+const apiUrl =
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:8000";
+
+async function fetchJson<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${apiUrl}/api/v1/weather/current`, {
-      cache: "no-store",
-    });
+    const response = await fetch(`${apiUrl}${path}`, { cache: "no-store" });
     if (!response.ok) return null;
     return response.json();
   } catch {
@@ -32,48 +57,64 @@ async function getWeather(): Promise<Weather | null> {
   }
 }
 
-const riskZones = [
-  { name: "Zone A", score: 91, level: "Critical" },
-  { name: "Zone B", score: 84, level: "High" },
-  { name: "Zone C", score: 72, level: "Elevated" },
-  { name: "Zone D", score: 48, level: "Moderate" },
-];
-
 const pillars = [
   {
     title: "Data Engineering",
-    description: "Dockerized ingestion, PostgreSQL, dbt transformations, orchestration and data quality.",
+    description: "CSV and weather ingestion, PostgreSQL raw storage, dbt transformations and pipeline observability.",
     icon: Workflow,
   },
   {
     title: "Data Analytics",
-    description: "Operational KPIs, spatial and temporal trends, hotspot analysis and decision-ready insights.",
+    description: "Yearly accident trends, severity mix, fatality indicators and operational metrics.",
     icon: Activity,
   },
   {
     title: "Data Science",
-    description: "Risk prediction, feature engineering, model evaluation and explainable predictions.",
+    description: "The next phase adds forecasting and risk features after the analytics baseline is validated.",
     icon: BrainCircuit,
   },
 ];
 
 export default async function Home() {
-  const weather = await getWeather();
+  const [weather, accidents, trend] = await Promise.all([
+    fetchJson<Weather>("/api/v1/weather/current"),
+    fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
+    fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
+  ]);
+
+  const recentTrend = (trend ?? []).slice(-6);
+  const maxAccidents = Math.max(...recentTrend.map((row) => row.total_accidents), 1);
 
   const metrics = [
-    { label: "City Risk Score", value: "82", suffix: "/100", hint: "Demo model" },
-    { label: "High-Risk Zones", value: "7", suffix: "", hint: "Demo model" },
     {
-      label: "Temperature",
-      value: weather?.temperature_c != null ? weather.temperature_c.toFixed(1) : "—",
-      suffix: "°C",
-      hint: weather?.station_name ?? "Awaiting weather data",
+      label: "Latest Year",
+      value: accidents?.year?.toString() ?? "—",
+      suffix: "",
+      hint: "Accident dataset",
     },
     {
-      label: "Humidity",
-      value: weather?.humidity_pct != null ? weather.humidity_pct.toFixed(0) : "—",
-      suffix: "%",
-      hint: "Live warehouse data",
+      label: "Total Accidents",
+      value: accidents?.total_accidents?.toLocaleString("en-IN") ?? "—",
+      suffix: "",
+      hint:
+        accidents?.yoy_accident_change_pct != null
+          ? `${accidents.yoy_accident_change_pct > 0 ? "+" : ""}${accidents.yoy_accident_change_pct}% YoY`
+          : "Year-over-year trend",
+    },
+    {
+      label: "Fatalities",
+      value: accidents?.fatal_killed?.toLocaleString("en-IN") ?? "—",
+      suffix: "",
+      hint:
+        accidents?.fatalities_per_100_accidents != null
+          ? `${accidents.fatalities_per_100_accidents} per 100 accidents`
+          : "Fatality indicator",
+    },
+    {
+      label: "Persons Involved",
+      value: accidents?.total_persons_involved?.toLocaleString("en-IN") ?? "—",
+      suffix: "",
+      hint: "Latest annual total",
     },
   ];
 
@@ -90,12 +131,12 @@ export default async function Home() {
               Urban<span className="text-cyan-400">Pulse</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-              An end-to-end data platform for identifying, explaining, and predicting urban accident risk.
+              An end-to-end data platform combining accident analytics, weather ingestion, transformation and risk modeling.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-2 text-sm text-emerald-300">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Live data pipeline connected
+            Real accident + weather data
           </div>
         </header>
 
@@ -116,45 +157,89 @@ export default async function Home() {
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Risk operations</p>
-                <h2 className="mt-1 text-xl font-semibold text-white">Priority zones</h2>
+                <p className="text-sm text-slate-500">Accident analytics</p>
+                <h2 className="mt-1 text-xl font-semibold text-white">Recent annual trend</h2>
               </div>
-              <AlertTriangle className="h-5 w-5 text-amber-400" />
+              <TrendingUp className="h-5 w-5 text-cyan-400" />
             </div>
-            <div className="space-y-5">
-              {riskZones.map((zone) => (
-                <div key={zone.name}>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-200">{zone.name}</span>
-                    <span className="text-slate-400">{zone.score}/100 · {zone.level}</span>
+
+            <div className="space-y-4">
+              {recentTrend.length ? (
+                recentTrend.map((row) => (
+                  <div key={row.year} className="grid grid-cols-[3.5rem_1fr_5rem] items-center gap-3 text-sm">
+                    <span className="text-slate-400">{row.year}</span>
+                    <div className="h-3 overflow-hidden rounded-full bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-cyan-400"
+                        style={{ width: `${Math.max((row.total_accidents / maxAccidents) * 100, 2)}%` }}
+                      />
+                    </div>
+                    <span className="text-right font-medium text-slate-200">
+                      {row.total_accidents.toLocaleString("en-IN")}
+                    </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-                    <div className="h-full rounded-full bg-cyan-400" style={{ width: `${zone.score}%` }} />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Run accident ingestion and dbt build to populate the trend.</p>
+              )}
             </div>
           </article>
 
           <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
             <Database className="h-6 w-6 text-cyan-400" />
-            <p className="mt-5 text-sm text-slate-500">Current weather</p>
+            <p className="mt-5 text-sm text-slate-500">Latest severity profile</p>
             <h2 className="mt-1 text-xl font-semibold text-white">
-              {weather?.station_name ?? "No transformed data yet"}
+              {accidents ? `${accidents.year} breakdown` : "No accident data yet"}
             </h2>
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between text-sm">
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Fatal accidents</span>
+                <span className="font-medium text-slate-200">{accidents?.fatal_accidents?.toLocaleString("en-IN") ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Grievous injury accidents</span>
+                <span className="font-medium text-slate-200">{accidents?.grievous_injury_accidents?.toLocaleString("en-IN") ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Minor injury accidents</span>
+                <span className="font-medium text-slate-200">{accidents?.minor_injury_accidents?.toLocaleString("en-IN") ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Non-injury accidents</span>
+                <span className="font-medium text-slate-200">{accidents?.non_injury_accidents?.toLocaleString("en-IN") ?? "—"}</span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.65fr_1.35fr]">
+          <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
+            <p className="text-sm text-slate-500">Current weather</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">{weather?.station_name ?? "No weather data"}</h2>
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-slate-400"><Thermometer className="h-4 w-4" />Temperature</span>
                 <span className="font-medium text-slate-200">{weather?.temperature_c ?? "—"} °C</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-400"><Droplets className="h-4 w-4" />Rainfall</span>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-400"><Droplets className="h-4 w-4" />Humidity</span>
+                <span className="font-medium text-slate-200">{weather?.humidity_pct ?? "—"}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Rainfall</span>
                 <span className="font-medium text-slate-200">{weather?.rainfall_mm ?? "—"} mm</span>
               </div>
-              <p className="border-t border-slate-800 pt-4 text-xs leading-5 text-slate-500">
-                {weather?.weather_description ?? "Run ingestion and dbt to populate this card."}
-              </p>
             </div>
+          </article>
+
+          <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
+            <p className="text-sm text-slate-500">Data scope</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">1998–2025 annual accident history</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              The current accident source is annual aggregate data. It supports trend, severity and forecasting work,
+              but it does not contain district, road, latitude or longitude fields. Geographic hotspot claims are therefore
+              intentionally excluded until a location-level source is added.
+            </p>
           </article>
         </section>
 

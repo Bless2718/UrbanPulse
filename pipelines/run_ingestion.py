@@ -9,7 +9,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "ingestion"))
 
 from common import db_connection  # noqa: E402
-from accidents_data_gov import run as run_accidents  # noqa: E402
+from accidents_csv import run as run_accidents_csv  # noqa: E402
+from accidents_data_gov import run as run_accidents_api  # noqa: E402
 from weather_imd import run as run_imd_weather  # noqa: E402
 from weather_open_meteo import run as run_open_meteo_weather  # noqa: E402
 
@@ -79,7 +80,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run UrbanPulse ingestion pipelines")
     parser.add_argument(
         "--source",
-        choices=["weather", "accidents", "all"],
+        choices=["weather", "accidents", "accidents-api", "all"],
         default="all",
     )
     args = parser.parse_args()
@@ -87,7 +88,9 @@ def main() -> None:
     if args.source in ("weather", "all"):
         run_weather()
     if args.source in ("accidents", "all"):
-        execute("data_gov_road_accidents", run_accidents)
+        execute("csv_road_accidents", run_accidents_csv)
+    if args.source == "accidents-api":
+        execute("data_gov_road_accidents", run_accidents_api)
 
 
 if __name__ == "__main__":

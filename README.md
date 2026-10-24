@@ -1,86 +1,106 @@
 # UrbanPulse
 
-**UrbanPulse** is an end-to-end urban risk intelligence platform built to demonstrate **Data Engineering, Data Analytics, and Data Science** in one portfolio project.
+UrbanPulse is an end-to-end portfolio project combining **Data Engineering, Data Analytics and Data Science** around urban road-accident intelligence.
 
-The first use case is urban road-accident risk. The platform is being developed as a real data product: source ingestion -> raw warehouse -> transformations -> analytics -> ML -> API -> Tailwind dashboard.
+## Current data flow
 
-## Current stack
+```text
+Open-Meteo -> Python ingestion -> PostgreSQL raw -> dbt -> FastAPI -> Next.js
+Road-accident CSV -> Python ingestion -> PostgreSQL raw -> dbt -> FastAPI -> Next.js
+```
 
-- **Frontend:** Next.js, TypeScript, Tailwind CSS
-- **Backend:** FastAPI, Python
-- **Database:** PostgreSQL + JSONB raw layer
-- **Data Engineering:** Dockerized ingestion jobs, pipeline-run logging, Airflow-ready DAG, dbt-ready models
-- **Data Science:** ML workspace for feature engineering, training, evaluation and inference
-- **DevOps:** Docker Compose, GitHub Actions
+The accident source currently contains 28 annual records covering **1998-2025** with accident severity, fatalities, injuries and total persons involved. It is aggregate annual data, so UrbanPulse does not claim geographic hotspot analysis until a location-level source is added.
 
-## Start PostgreSQL
+## Stack
+
+- Next.js + TypeScript + Tailwind CSS
+- FastAPI
+- PostgreSQL
+- Python ingestion jobs
+- dbt
+- Docker Compose
+- GitHub Actions
+
+## Start the database
 
 ```bash
 docker compose up -d db
 ```
 
-If you created the database before warehouse SQL changes:
+For an existing UrbanPulse database, apply the accident-table migration once:
 
 ```bash
-docker compose down -v
-docker compose up -d db
+docker exec -it urbanpulse-db-1 psql -U urbanpulse -d urbanpulse -f /docker-entrypoint-initdb.d/003_accident_yearly_summary.sql
 ```
 
-## Run ingestion with Docker
+## Load accident CSV
 
-This is the recommended workflow because it is reproducible across Windows, macOS and Linux.
+The repository includes:
 
-Weather:
-
-```bash
-docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source weather
+```text
+data/raw/accidents/road_accidents_1998_2025.csv
 ```
 
-Accidents:
+Build and run the ingestion job:
 
 ```bash
+docker compose --profile jobs build ingestion
 docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source accidents
 ```
 
-All sources:
+The loader is idempotent: records are upserted by year.
+
+## Run dbt
 
 ```bash
-docker compose --profile jobs run --rm ingestion python pipelines/run_ingestion.py --source all
+docker compose --profile jobs run --rm transform deps
+docker compose --profile jobs run --rm transform build
 ```
 
-For road-accident ingestion, add your data.gov.in values to `.env`:
+Important models:
 
-```env
-DATA_GOV_API_KEY=your_key
-DATA_GOV_ACCIDENT_RESOURCE_ID=your_resource_id
+- `stg_weather_observations`
+- `weather_current`
+- `stg_accident_yearly`
+- `accident_yearly_metrics`
+
+## Start API and dashboard
+
+```bash
+docker compose build api web
+docker compose up -d api web
 ```
 
-## Data model
+API checks:
 
-- `raw.weather_observations`
-- `raw.accident_records`
-- `analytics.pipeline_runs`
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/weather/current
+curl http://localhost:8000/api/v1/accidents/summary
+curl http://localhost:8000/api/v1/accidents/trend
+```
 
-Every source payload is retained as JSONB for lineage and reprocessing, while commonly analyzed fields are normalized into typed columns.
+Dashboard:
+
+```text
+http://localhost:3000
+```
 
 ## Roadmap
 
-- [x] Monorepo starter
-- [x] Tailwind CSS UI
-- [x] FastAPI backend
-- [x] PostgreSQL
-- [x] Docker Compose
-- [x] GitHub Actions
-- [x] Dockerized ingestion runtime
-- [x] IMD weather ingestion connector
-- [x] data.gov.in accident ingestion connector
-- [x] Raw warehouse schema
-- [x] Pipeline observability
-- [ ] Choose/profile primary accident resource
-- [ ] dbt staging + analytics marts
-- [ ] Exploratory/geospatial analytics
-- [ ] Accident-risk feature engineering
-- [ ] Baseline ML model
-- [ ] SHAP explanations
-- [ ] Interactive map
-- [ ] Model/data monitoring
+- [x] Dockerized PostgreSQL warehouse
+- [x] Weather ingestion
+- [x] Annual accident CSV ingestion
+- [x] Pipeline run logging
+- [x] dbt weather mart
+- [x] dbt accident staging + yearly metrics
+- [x] FastAPI weather endpoint
+- [x] FastAPI accident summary + trend endpoints
+- [x] Dashboard backed by real accident and weather data
+- [ ] Exploratory accident analysis
+- [ ] Time-series baseline / forecasting
+- [ ] Location-level accident source
+- [ ] Geographic hotspot analytics
+- [ ] Risk feature engineering
+- [ ] Explainable ML model
+- [ ] Monitoring

@@ -22,6 +22,7 @@ services:
       dockerfile: ingestion/Dockerfile
     environment:
       DATABASE_URL: postgresql+pg8000://${POSTGRES_USER:-urbanpulse}:${POSTGRES_PASSWORD:-urbanpulse_dev}@db:5432/${POSTGRES_DB:-urbanpulse}
+      ACCIDENT_CSV_PATH: ${ACCIDENT_CSV_PATH:-data/raw/accidents/road_accidents_1998_2025.csv}
       WEATHER_PROVIDER: ${WEATHER_PROVIDER:-open-meteo}
       OPEN_METEO_URL: ${OPEN_METEO_URL:-https://api.open-meteo.com/v1/forecast}
       WEATHER_LATITUDE: ${WEATHER_LATITUDE:-13.0827}

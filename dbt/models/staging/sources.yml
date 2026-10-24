@@ -5,6 +5,7 @@ sources:
     schema: raw
     tables:
       - name: weather_observations
+      - name: accident_yearly_summary
 
 models:
   - name: stg_weather_observations
@@ -21,3 +22,12 @@ models:
               min_value: 0
               max_value: 100
               inclusive: true
+
+  - name: stg_accident_yearly
+    columns:
+      - name: accident_yearly_id
+        tests: [not_null, unique]
+      - name: year
+        tests: [not_null, unique]
+      - name: total_accidents
+        tests: [not_null]

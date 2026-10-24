@@ -7,7 +7,7 @@ from app.database import engine
 
 app = FastAPI(
     title="UrbanPulse API",
-    version="0.2.0",
+    version="0.3.0",
     description="Backend API for UrbanPulse urban risk intelligence.",
 )
 
@@ -41,44 +41,69 @@ def health() -> dict[str, str]:
 def current_weather() -> dict:
     query = text(
         """
-        SELECT
-            weather_observation_id,
-            station_id,
-            station_name,
-            temperature_c,
-            humidity_pct,
-            rainfall_mm,
-            weather_description,
-            ingested_at
+        SELECT weather_observation_id, station_id, station_name,
+               temperature_c, humidity_pct, rainfall_mm,
+               weather_description, ingested_at
         FROM analytics.weather_current
         ORDER BY ingested_at DESC
         LIMIT 1
         """
     )
-
     try:
         with engine.connect() as conn:
             row = conn.execute(query).mappings().first()
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail="Weather analytics model is unavailable. Run the dbt transform job first.",
+            detail="Weather analytics model is unavailable. Run dbt build first.",
         ) from exc
-
     if row is None:
         raise HTTPException(status_code=404, detail="No weather observations available")
-
     return {
         **dict(row),
         "ingested_at": row["ingested_at"].isoformat() if row["ingested_at"] else None,
     }
 
 
-@app.get("/api/v1/risk/summary")
-def risk_summary() -> dict:
-    return {
-        "city_risk_score": 82,
-        "high_risk_zones": 7,
-        "predicted_risk_next_hour": 0.76,
-        "source": "demo",
-    }
+@app.get("/api/v1/accidents/summary")
+def accident_summary() -> dict:
+    query = text(
+        """
+        SELECT *
+        FROM analytics.accident_yearly_metrics
+        ORDER BY year DESC
+        LIMIT 1
+        """
+    )
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Accident analytics model is unavailable. Run accident ingestion and dbt build first.",
+        ) from exc
+    if row is None:
+        raise HTTPException(status_code=404, detail="No accident data available")
+    return dict(row)
+
+
+@app.get("/api/v1/accidents/trend")
+def accident_trend() -> list[dict]:
+    query = text(
+        """
+        SELECT year, total_accidents, fatal_accidents, fatal_killed,
+               total_persons_involved, yoy_accident_change_pct
+        FROM analytics.accident_yearly_metrics
+        ORDER BY year
+        """
+    )
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(query).mappings().all()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Accident analytics model is unavailable. Run accident ingestion and dbt build first.",
+        ) from exc
+    return [dict(row) for row in rows]
