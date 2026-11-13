@@ -62,10 +62,18 @@ def parse_district(path):
             if key in seen:
                 raise ValueError(f"Duplicate district/year: {key}")
             seen.add(key)
+            accidents_raw = row[f"Total Accidents {year}"].strip()
+            deaths_raw = row[f"Total Deaths {year}"].strip()
+            missing = {"", "NA", "N/A", "NULL", "-"}
+            if accidents_raw.upper() in missing or deaths_raw.upper() in missing:
+                if accidents_raw.upper() not in missing or deaths_raw.upper() not in missing:
+                    raise ValueError(f"Partial missing district data: {key}")
+                print(f"Skipping unavailable source values for {district}, {year} (NA is not zero)")
+                continue
             record = {
                 "district": district, "year": year,
-                "total_accidents": int(row[f"Total Accidents {year}"].replace(",", "")),
-                "total_deaths": int(row[f"Total Deaths {year}"].replace(",", "")),
+                "total_accidents": int(accidents_raw.replace(",", "")),
+                "total_deaths": int(deaths_raw.replace(",", "")),
                 "source_url": DISTRICT_SOURCE,
             }
             if record["total_accidents"] < 0 or record["total_deaths"] < 0:
