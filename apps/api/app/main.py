@@ -5,6 +5,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.risk_api import router as risk_router
+from app.tn_historical import router as tn_historical_router
 from app.historical_risk import router as historical_risk_router
 from app.weather_context import router as weather_context_router
 
@@ -26,6 +27,7 @@ app.add_middleware(
 
 
 app.include_router(risk_router)
+app.include_router(tn_historical_router)
 app.include_router(historical_risk_router)
 app.include_router(weather_context_router)
 
