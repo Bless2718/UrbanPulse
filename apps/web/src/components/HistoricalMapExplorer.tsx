@@ -95,7 +95,7 @@ export default function HistoricalMapExplorer({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="urban-panel flex flex-wrap items-end justify-between gap-4 p-4 sm:p-5">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-cyan-300">
             Accident map layer
@@ -119,7 +119,7 @@ export default function HistoricalMapExplorer({
               setLoadedYear("");
               setRecords([]);
             }}
-            className="rounded-xl border border-white/15 bg-slate-900 px-4 py-2 text-sm text-white"
+            className="urban-select rounded-xl px-4 py-2 text-sm text-white"
           >
             <option value="combined">2020-2021 combined</option>
             <option value="2021">2021 (newer source)</option>
