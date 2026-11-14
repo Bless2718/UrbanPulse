@@ -299,6 +299,22 @@ export default async function Home() {
           history={tamilNaduAnnual?.records ?? []}
         />
 
+        <Link
+          href="/forecast/districts"
+          className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.05] p-5 transition hover:border-cyan-300/40 hover:bg-cyan-400/[0.09]"
+        >
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-cyan-300">District forecast research</p>
+            <h3 className="mt-2 text-lg font-semibold text-white">Explore district trends and 2026 scenarios</h3>
+            <p className="mt-1 text-sm text-slate-400">
+              Interactive what-if analysis with clear model-readiness warnings. Scenarios are not ML predictions.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-cyan-300">
+            Open District Lab <ArrowUpRight className="h-4 w-4" />
+          </span>
+        </Link>
+
         <DistrictAccidentComparison />
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
