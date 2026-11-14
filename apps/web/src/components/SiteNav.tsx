@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Activity, FlaskConical, Map, RadioTower } from "lucide-react";
+import { Activity, BarChart3, FlaskConical, Map, RadioTower } from "lucide-react";
 
 type Props = {
-  active?: "dashboard" | "map" | "districts";
+  active?: "dashboard" | "map" | "districts" | "evaluation";
 };
 
 export default function SiteNav({ active = "dashboard" }: Props) {
@@ -22,18 +22,18 @@ export default function SiteNav({ active = "dashboard" }: Props) {
         <nav className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
           <Link
             href="/"
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition sm:px-3 ${
               active === "dashboard"
                 ? "bg-white/10 text-white"
                 : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
             }`}
           >
             <Activity className="h-4 w-4" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </Link>
           <Link
             href="/forecast/districts"
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition sm:px-3 ${
               active === "districts"
                 ? "bg-white/10 text-white"
                 : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
@@ -44,6 +44,18 @@ export default function SiteNav({ active = "dashboard" }: Props) {
             <span className="sm:hidden">Lab</span>
           </Link>
           <Link
+            href="/forecast/evaluation"
+            aria-label="Forecast Evaluation"
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition sm:px-3 ${
+              active === "evaluation"
+                ? "bg-white/10 text-white"
+                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden md:inline">Evaluation</span>
+          </Link>
+          <Link
             href="/map"
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
               active === "map"
@@ -52,7 +64,7 @@ export default function SiteNav({ active = "dashboard" }: Props) {
             }`}
           >
             <Map className="h-4 w-4" />
-            Map
+            <span className="hidden sm:inline">Map</span>
           </Link>
         </nav>
       </div>
