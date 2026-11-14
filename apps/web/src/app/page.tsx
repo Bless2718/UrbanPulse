@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
+import DistrictAccidentComparison from "@/components/DistrictAccidentComparison";
 
 type Weather = {
   station_name: string | null;
@@ -45,6 +46,16 @@ type AccidentForecast = {
   validation_mape_pct: number;
 };
 
+type TamilNaduAnnual = {
+  records: {
+    year: number;
+    provisional: boolean;
+    total_accidents: number;
+    persons_killed: number;
+    source_url: string;
+  }[];
+};
+
 const apiUrl =
   process.env.API_INTERNAL_URL ??
   process.env.NEXT_PUBLIC_API_URL ??
@@ -61,12 +72,16 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export default async function Home() {
-  const [weather, accidents, trend, forecast] = await Promise.all([
+  const [weather, accidents, trend, forecast, tamilNaduAnnual] = await Promise.all([
     fetchJson<Weather>("/api/v1/weather/current"),
     fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
     fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
     fetchJson<AccidentForecast>("/api/v1/accidents/forecast"),
+    fetchJson<TamilNaduAnnual>("/api/v1/accidents/tamil-nadu/annual"),
   ]);
+
+  const tnRecent = (tamilNaduAnnual?.records ?? []).slice(-8);
+  const tnMax = Math.max(1, ...tnRecent.map((row) => row.total_accidents));
 
   const recentTrend = (trend ?? []).slice(-6);
   const maxAccidents = Math.max(...recentTrend.map((row) => row.total_accidents), 1);
@@ -213,6 +228,71 @@ export default async function Home() {
             </p>
           </article>
         </section>
+
+
+        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.025] p-6 md:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
+                Tamil Nadu statewide history
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">
+                Historical accident trends
+              </h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Annual road accident totals, 1993?2025.
+                This statewide series is separate from the existing forecast dataset.
+              </p>
+            </div>
+            <TrendingUp className="h-6 w-6 text-cyan-300" />
+          </div>
+
+          <div className="mt-8 space-y-4">
+            {tnRecent.length ? (
+              tnRecent.map((row) => (
+                <div
+                  key={row.year}
+                  className="grid grid-cols-[5rem_1fr_5.5rem] items-center gap-3"
+                >
+                  <span className="text-sm text-slate-400">
+                    {row.year}{row.provisional ? " (P)" : ""}
+                  </span>
+                  <div className="h-3 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-400"
+                      style={{
+                        width: `${(row.total_accidents / tnMax) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-right text-sm font-medium text-white">
+                    {row.total_accidents.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">
+                Historical accident data is currently unavailable.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-7 border-t border-white/10 pt-4 text-xs text-slate-500">
+            P = provisional. Source: Tamil Nadu road accident reports via OpenCity.
+            {tnRecent.length > 0 && (
+              <a
+                href={tnRecent[0].source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 text-cyan-300 hover:underline"
+              >
+                View source
+              </a>
+            )}
+          </div>
+        </section>
+
+        <DistrictAccidentComparison />
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
           {[

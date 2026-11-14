@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MapPinned, ShieldCheck, Sparkles } from "lucide-react";
 
-import AccidentMap from "@/components/AccidentMap";
+import HistoricalMapExplorer from "@/components/HistoricalMapExplorer";
 import SiteNav from "@/components/SiteNav";
 
 type AccidentLocation = {
@@ -62,7 +62,7 @@ export default async function MapPage() {
               Tamil Nadu accident map
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-slate-400">
-              Compare district/city accident concentration using validated centroid coordinates and 2020–2021 totals.
+              Compare reporting-area accident totals across available years using validated centroid coordinates.
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export default async function MapPage() {
         </div>
 
         <section className="mt-10">
-          <AccidentMap locations={rows} />
+          <HistoricalMapExplorer locations={rows} />
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">

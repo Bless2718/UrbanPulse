@@ -7,12 +7,14 @@ type AccidentLocation = {
   total_2020: number;
   total_2021: number;
   total_accidents: number;
+  total_deaths?: number;
   latitude: number;
   longitude: number;
 };
 
 type Props = {
   locations: AccidentLocation[];
+  displayYear?: number;
 };
 
 type LeafletMap = {
@@ -89,7 +91,7 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#039;");
 }
 
-export default function AccidentMap({ locations }: Props) {
+export default function AccidentMap({ locations, displayYear }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +142,7 @@ export default function AccidentMap({ locations }: Props) {
               ? ((location.total_2021 - location.total_2020) / location.total_2020) * 100
               : 0;
 
-          marker.bindPopup(`
+          marker.bindPopup(displayYear == null ? `
             <div style="min-width:210px;font-family:Inter,system-ui,sans-serif">
               <strong style="font-size:15px">${escapeHtml(location.district)}</strong>
               <div style="margin-top:10px;color:#94a3b8">2020 accidents</div>
@@ -149,6 +151,15 @@ export default function AccidentMap({ locations }: Props) {
               <div style="font-size:16px;font-weight:700">${location.total_2021.toLocaleString("en-IN")}</div>
               <div style="margin-top:8px;color:#22d3ee;font-weight:700">Total ${location.total_accidents.toLocaleString("en-IN")}</div>
               <div style="margin-top:6px;color:#cbd5e1">2021 change: ${change >= 0 ? "+" : ""}${change.toFixed(1)}%</div>
+            </div>
+          ` : `
+            <div style="min-width:210px;font-family:Inter,system-ui,sans-serif">
+              <strong style="font-size:15px">${escapeHtml(location.district)}</strong>
+              <div style="margin-top:10px;color:#94a3b8">${displayYear} reported accidents</div>
+              <div style="font-size:16px;font-weight:700">${location.total_accidents.toLocaleString("en-IN")}</div>
+              <div style="margin-top:8px;color:#94a3b8">Reported deaths</div>
+              <div style="font-size:16px;font-weight:700">${location.total_deaths?.toLocaleString("en-IN") ?? "Unavailable"}</div>
+              <div style="margin-top:8px;color:#64748b;font-size:11px">Reporting-area centroid, not a crash location</div>
             </div>
           `);
         });
@@ -191,7 +202,9 @@ export default function AccidentMap({ locations }: Props) {
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-cyan-950/20">
       <div ref={containerRef} className="h-[620px] w-full" />
       <div className="pointer-events-none absolute left-5 top-5 z-[500] rounded-full border border-white/10 bg-slate-950/90 px-4 py-2 text-xs font-medium text-slate-200 backdrop-blur">
-        Marker size = combined 2020–2021 accidents
+        {displayYear == null
+          ? "Marker size = combined 2020-2021 accidents"
+          : `Marker size = ${displayYear} reported accidents`}
       </div>
     </div>
   );
