@@ -63,6 +63,24 @@ python -m unittest discover -s ingestion/tests -v
 See [district research staging guide](docs/tn_district_research_staging.md)
 for data sources, digest controls, limitations, and the next release gate.
 
+## Phase 3: offline district forecasting experiments (NOT production)
+
+A separate **read-only experimental ML lab** compares persistence,
+three-year moving average, and a four-year linear trend using strictly
+chronological one- and two-year historical holdouts (through 2023).
+The still-disputed 2024 district data is excluded. The lab accepts only
+quarantined source versions and **does not create 2026 district forecasts**,
+change the existing API/dashboard, or promote any model-ready series.
+
+```powershell
+docker compose --profile jobs build ingestion
+docker compose --profile jobs run --rm ingestion python ingestion/backtest_tn_district_experiments.py
+```
+
+See the [Phase 3 methods, limitations and frontend roadmap](docs/tn_district_forecasting_experiments_phase3.md).
+Frontend visualization is planned for a later **clearly labelled historical evaluation**
+phase, not this backtesting implementation.
+
 ## Phase 2: district boundary and source-revision investigation
 
 District research **remains quarantined**. The new reconciliation review
