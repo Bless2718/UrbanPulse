@@ -262,7 +262,7 @@ def apply_to_staging(
                FROM staging.tn_district_research_imports WHERE source_sha256=%s""",
             (key,),
         )
-        stored = cursor.fetchone()
+        stored = tuple(cursor.fetchone())
         if stored != (len(records), metadata["validation_file_sha256"], "quarantined", False):
             raise ValueError("Research import ID already exists with mismatched metadata")
 
@@ -299,7 +299,7 @@ def apply_to_staging(
                WHERE source_sha256=%s GROUP BY year ORDER BY year""",
             (key,),
         )
-        stored_years = cursor.fetchall()
+        stored_years = [tuple(row) for row in cursor.fetchall()]
         expected_years = [
             (x["year"], x["row_count"], x["accident_sum"], x["death_sum"], True)
             for x in checks
@@ -313,7 +313,7 @@ def apply_to_staging(
                FROM staging.tn_district_research_checks WHERE source_sha256=%s""",
             (key,),
         )
-        stored_checks = cursor.fetchone()
+        stored_checks = tuple(cursor.fetchone())
         if stored_checks != (9, True, True):
             raise ValueError("Post-insert research check verification failed")
         connection.commit()
