@@ -1,45 +1,38 @@
 import Link from "next/link";
 import {
-  Activity,
   ArrowUpRight,
-  BarChart3,
   BrainCircuit,
+  CalendarDays,
+  CarFront,
   CloudRain,
   Database,
   FlaskConical,
   MapPinned,
   ShieldAlert,
-  ShieldCheck,
-  TrendingUp,
+  Target,
+  TriangleAlert,
   Workflow,
 } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
+import UrbanHero from "@/components/UrbanHero";
+import DashboardKpiCard from "@/components/DashboardKpiCard";
+import AccidentTrendPanel, { type AccidentTrendPoint, type LegacyForecastPoint } from "@/components/AccidentTrendPanel";
+import SeverityDonutPanel, { type SeveritySummary } from "@/components/SeverityDonutPanel";
 import DistrictAccidentComparison from "@/components/DistrictAccidentComparison";
 import StatewideHistoryChart from "@/components/StatewideHistoryChart";
 import StatewideForecastPanel, { type StatewideForecast } from "@/components/StatewideForecastPanel";
 
-type AccidentSummary = {
-  year: number;
-  fatal_accidents: number;
-  fatal_killed: number;
-  grievous_injury_accidents: number;
-  minor_injury_accidents: number;
-  non_injury_accidents: number;
-  total_accidents: number;
+type AccidentSummary = SeveritySummary & {
   fatalities_per_100_accidents: number | null;
   yoy_accident_change_pct: number | null;
 };
-
-type AccidentForecast = {
-  forecast_year: number;
-  predicted_accidents: number;
-  model_name: string;
+type AccidentTrend = AccidentTrendPoint & { fatal_killed: number };
+type LegacyForecast = LegacyForecastPoint & {
   validation_mae: number;
   validation_rmse: number;
   validation_mape_pct: number;
 };
-
 type TamilNaduAnnual = {
   records: {
     year: number;
@@ -50,263 +43,240 @@ type TamilNaduAnnual = {
   }[];
 };
 
-const apiUrl =
-  process.env.API_INTERNAL_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:8000";
+const apiUrl = process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-async function fetchJson<T>(path: string): Promise<T | null> {
+async function fetchJson<T>(endpoint: string): Promise<T | null> {
   try {
-    const response = await fetch(apiUrl + path, { cache: "no-store" });
+    const response = await fetch(apiUrl + endpoint, { cache: "no-store" });
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
     return null;
   }
 }
-
-function SummaryCard({ label, value, detail, accent = false }: {
-  label: string;
-  value: string;
-  detail: string;
-  accent?: boolean;
-}) {
-  return (
-    <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className={"mt-3 break-words text-3xl font-semibold tracking-tight tabular-nums " +
-        (accent ? "text-amber-200" : "text-white")}>{value}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
-    </article>
-  );
+function displayCount(value: number | undefined | null): string {
+  return value !== null && value !== undefined && Number.isFinite(value) && value >= 0
+    ? value.toLocaleString("en-IN", { maximumFractionDigits: 0 })
+    : "—";
 }
 
 export default async function Home() {
-  const [accidents, forecast, tamilNaduAnnual, statewideForecast] = await Promise.all([
+  const [accidents, rawTrend, rawForecast, tamilNaduAnnual, statewideForecast] = await Promise.all([
     fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
-    fetchJson<AccidentForecast>("/api/v1/accidents/forecast"),
+    fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
+    fetchJson<LegacyForecast>("/api/v1/accidents/forecast"),
     fetchJson<TamilNaduAnnual>("/api/v1/accidents/tamil-nadu/annual"),
     fetchJson<StatewideForecast>("/api/v1/predictions/tamil-nadu/annual"),
   ]);
 
+  // Imported accident summary, historical trend and baseline share the
+  // legacy analytics dataset. Do not treat this as Tamil Nadu statewide data.
+  const summary = accidents &&
+    Number.isInteger(accidents.year) &&
+    Number.isFinite(accidents.total_accidents) &&
+    accidents.total_accidents >= 0 ? accidents : null;
+  const trend = Array.isArray(rawTrend) ? rawTrend.filter((row) =>
+    Number.isInteger(row.year) &&
+    Number.isFinite(row.total_accidents) && row.total_accidents >= 0 &&
+    (!summary || row.year <= summary.year)
+  ) : [];
+  const sortedTrend = [...trend].sort((a, b) => a.year - b.year);
+  const lastTrend = sortedTrend[sortedTrend.length - 1];
+  const aligned = Boolean(summary && lastTrend &&
+    lastTrend.year === summary.year &&
+    lastTrend.total_accidents === summary.total_accidents);
+  const safeTrend = aligned ? sortedTrend : [];
+
+  // Forecast is only compared to the imported series when its origin aligns.
+  const forecast = summary && rawForecast &&
+    Number.isFinite(rawForecast.predicted_accidents) &&
+    rawForecast.predicted_accidents >= 0 &&
+    rawForecast.forecast_year === summary.year + 1 &&
+    rawForecast.training_end_year === summary.year
+    ? rawForecast : null;
+
+  const accidentSpark = safeTrend.slice(-6).map((item) => item.total_accidents);
+  const fatalitiesSpark = safeTrend.slice(-6)
+    .map((item) => item.fatal_killed)
+    .filter((value) => Number.isFinite(value) && value >= 0);
+  const yoy = summary?.yoy_accident_change_pct;
+  const recentYoY = typeof yoy === "number" && Number.isFinite(yoy)
+    ? (yoy >= 0 ? "+" : "") + yoy.toFixed(1) + "% year on year"
+    : "Latest imported accident series";
+  const validationNote = forecast && Number.isFinite(forecast.validation_mae)
+    ? forecast.model_name.replaceAll("_", " ") + " · backtest MAE " +
+      displayCount(Math.round(forecast.validation_mae))
+    : "Baseline not available for this series";
+
+  // Statewide data is kept separate from the legacy accident KPI series.
   const statewideRecords = (tamilNaduAnnual?.records ?? [])
-    .filter((record) =>
-      Number.isInteger(record.year) &&
-      Number.isFinite(record.total_accidents) &&
-      Number.isFinite(record.persons_killed)
-    )
+    .filter((row) => Number.isInteger(row.year) &&
+      Number.isFinite(row.total_accidents) && row.total_accidents >= 0 &&
+      Number.isFinite(row.persons_killed) && row.persons_killed >= 0)
     .sort((a, b) => a.year - b.year);
-  const latest = statewideRecords[statewideRecords.length - 1];
-  const reportedYear = latest?.year;
-  const format = (count: number | undefined) =>
-    count === undefined ? "—" : count.toLocaleString("en-IN");
+  const latestStatewide = statewideRecords[statewideRecords.length - 1];
+
+  const modules = [
+    { href: "/forecast/districts", icon: FlaskConical, title: "District Lab",
+      caption: "Historical district trends, reporting quality and scenario exploration." },
+    { href: "/forecast/evaluation", icon: BrainCircuit, title: "Model Evaluation",
+      caption: "Compare past baseline predictions with observed accident counts." },
+    { href: "/conditions", icon: CloudRain, title: "Live Conditions",
+      caption: "View current weather context for six Tamil Nadu city centres." },
+    { href: "/map", icon: MapPinned, title: "Geospatial Explorer",
+      caption: "Explore reporting-area centroids, not precise crash hotspots." },
+  ];
 
   return (
-    <main className="min-h-screen">
+    <main className="urban-shell min-h-screen">
       <SiteNav active="dashboard" />
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
-        <header className="flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1.5 text-xs font-medium uppercase tracking-[0.13em] text-cyan-300">
-              <Activity className="h-3.5 w-3.5" /> Tamil Nadu · Research dashboard
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
-              Road Safety Overview
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
-              Explore observed accidents, understand reporting trends and compare experimental forecasts.
-              Every figure is identified as historical, provisional or research-only.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/forecast/evaluation"
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-2.5 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/10">
-              <BarChart3 className="h-4 w-4" /> Forecast evaluation <ArrowUpRight className="h-4 w-4" />
-            </Link>
-            <Link href="/map"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm text-slate-200 transition hover:bg-white/[0.07]">
-              <MapPinned className="h-4 w-4" /> Open map
-            </Link>
-          </div>
-        </header>
+      <div className="relative z-[1] mx-auto max-w-[1470px] px-4 pb-12 pt-7 sm:px-6 lg:px-8">
+        <UrbanHero />
 
-        <section role="note" className="mt-7 rounded-2xl border border-amber-300/25 bg-amber-300/[0.04] p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+        <section aria-label="Latest imported accident data and experimental baseline"
+          className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardKpiCard icon={CalendarDays} featured
+            label="Observed year"
+            value={summary ? String(summary.year) : "—"}
+            note={summary ? "Latest imported accident record" : "Accident summary unavailable"} />
+          <DashboardKpiCard icon={CarFront} label="Total accidents"
+            value={displayCount(summary?.total_accidents)}
+            note={summary ? "Imported accident series · " + summary.year : "Accident summary unavailable"}
+            tag={summary ? recentYoY : null}
+            sparkline={accidentSpark.length >= 2 ? accidentSpark : undefined} />
+          <DashboardKpiCard icon={TriangleAlert} tone="blue" label="Fatalities"
+            value={displayCount(summary?.fatal_killed)}
+            note={summary && typeof summary.fatalities_per_100_accidents === "number"
+              ? summary.fatalities_per_100_accidents.toFixed(2) + " killed per 100 accidents"
+              : "Persons killed in imported series"}
+            sparkline={fatalitiesSpark.length >= 2 ? fatalitiesSpark : undefined} />
+          <DashboardKpiCard icon={Target} tone="blue"
+            label={forecast ? String(forecast.forecast_year) + " baseline" : "Baseline forecast"}
+            value={displayCount(forecast?.predicted_accidents)}
+            note={validationNote} />
+        </section>
+
+        <section className="mt-5 grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.9fr)_minmax(330px,0.95fr)]">
+          <AccidentTrendPanel trend={safeTrend} forecast={forecast} />
+          <SeverityDonutPanel summary={summary} />
+        </section>
+
+        <section role="note" className="urban-research-notice mt-5 flex items-start gap-3 px-4 py-3">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+          <p className="text-xs leading-5 text-amber-100/90">
+            <strong>Research-only analytics.</strong> The imported accident series above is distinct from
+            the Tamil Nadu statewide series below. Historical district boundaries and the 2024 revision
+            remain unresolved. No validated hourly, district or road-level danger probability is available;
+            experimental forecasts are not approved for operational safety decisions.
+          </p>
+        </section>
+
+        <section aria-labelledby="workspace-heading" className="mt-10">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-amber-100">Research only · District risk predictions not approved</h2>
-              <p className="mt-1.5 text-sm leading-6 text-slate-300">
-                District reporting boundaries and the 2024 revision still need independent reconciliation.
-                Weather is available as environmental context, but no validated road-level or hourly accident danger probability exists.
-                The statewide forecast below is an experimental baseline, not an operational safety prediction.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                Explore UrbanPulse
               </p>
+              <h2 id="workspace-heading" className="mt-2 text-2xl font-semibold text-white">
+                Research workspace
+              </h2>
             </div>
+            <span className="text-xs text-slate-400">Historical analysis · live weather · experimental models</span>
           </div>
-        </section>
-
-        <section aria-label="Latest statewide reporting snapshot" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="Latest reported year" value={reportedYear?.toString() ?? "—"}
-            detail={latest ? "Tamil Nadu statewide source series" : "Historical API unavailable"} />
-          <SummaryCard label="Reported accidents" value={format(latest?.total_accidents)}
-            detail={latest ? "Statewide count · " + latest.year : "Historical API unavailable"} />
-          <SummaryCard label="Persons killed" value={format(latest?.persons_killed)}
-            detail={latest ? "Reported fatalities · " + latest.year : "Historical API unavailable"} />
-          <SummaryCard label="Latest year status"
-            value={latest ? (latest.provisional ? "Provisional" : "Reported") : "Unavailable"}
-            detail={latest?.provisional ? "Subject to official data revision" : "Publication status, not ML approval"}
-            accent={Boolean(latest?.provisional)} />
-        </section>
-
-        <section className="mt-5 grid gap-5 lg:grid-cols-[1.65fr_0.8fr]">
-          <StatewideHistoryChart records={statewideRecords} />
-
-          <aside className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 sm:p-7">
-            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
-              <Database className="h-4 w-4" /> Data context
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-white">What these numbers mean</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              This dashboard shows published statewide accident totals. Historical accident counts
-              are different from the likelihood of an individual accident.
-            </p>
-            <dl className="mt-5 space-y-4 text-sm">
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3">
-                <dt className="text-slate-400">Years available</dt>
-                <dd className="font-medium text-white">{statewideRecords.length || "—"}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3">
-                <dt className="text-slate-400">Historical data</dt>
-                <dd className="inline-flex items-center gap-1.5 text-cyan-200">
-                  <ShieldCheck className="h-4 w-4" /> Descriptive
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3">
-                <dt className="text-slate-400">2024 source revision</dt>
-                <dd className="text-amber-200">Unresolved</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3">
-                <dt className="text-slate-400">Area risk model</dt>
-                <dd className="text-amber-200">Not approved</dd>
-              </div>
-            </dl>
-            <p className="mt-5 text-xs leading-6 text-slate-500">
-              The 2021–2023 district accident/death transcriptions matched a published source,
-              but historical reporting-area boundaries remain unverified.
-            </p>
-            <Link href="/forecast/evaluation"
-              className="mt-6 inline-flex items-center gap-2 text-sm text-cyan-300 hover:text-white">
-              Explore backtest accuracy <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </aside>
-        </section>
-
-        <section aria-labelledby="workspace-title" className="mt-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">Explore UrbanPulse</p>
-              <h2 id="workspace-title" className="mt-2 text-xl font-semibold text-white">Research workspace</h2>
-            </div>
-            <p className="text-xs text-slate-500">Select a module to explore the available evidence.</p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              { href: "/forecast/districts", label: "District Lab", tag: "Historical data", desc: "Browse district totals and transparent what-if scenarios.", icon: FlaskConical },
-              { href: "/forecast/evaluation", label: "Model Evaluation", tag: "Backtests", desc: "Compare historical predictions with actual accident counts.", icon: BrainCircuit },
-              { href: "/conditions", label: "Live Conditions", tag: "Weather context", desc: "Check current weather estimates across six Tamil Nadu cities.", icon: CloudRain },
-              { href: "/map", label: "Geospatial Explorer", tag: "Centroid map", desc: "Compare published totals by reporting-area location.", icon: MapPinned },
-            ].map(({ href, label, tag, desc, icon: Icon }) => (
-              <Link key={href} href={href}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300">
-                <div className="flex items-center justify-between">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/[0.06]">
-                    <Icon className="h-4 w-4 text-cyan-300" />
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {modules.map(({ href, icon: Icon, title, caption }) => (
+              <Link href={href} key={href}
+                className="urban-panel urban-module-card group flex min-h-[195px] flex-col p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300">
+                <div className="flex items-start justify-between">
+                  <span className="urban-kpi-icon grid h-11 w-11 place-items-center rounded-xl">
+                    <Icon className="h-6 w-6 text-cyan-200" strokeWidth={1.7} />
                   </span>
-                  <ArrowUpRight className="h-4 w-4 text-slate-500 transition group-hover:text-white" />
+                  <ArrowUpRight className="h-5 w-5 text-cyan-200 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
                 </div>
-                <p className="mt-5 text-xs uppercase tracking-wider text-slate-500">{tag}</p>
-                <h3 className="mt-2 font-semibold text-white">{label}</h3>
-                <p className="mt-2 flex-1 text-sm leading-6 text-slate-400">{desc}</p>
+                <h3 className="mt-5 text-lg font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{caption}</p>
               </Link>
             ))}
           </div>
         </section>
 
-        <section aria-labelledby="model-status-heading" className="mt-8 grid gap-5 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
-            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
-              <TrendingUp className="h-4 w-4" /> Existing baseline
-            </p>
-            <h2 id="model-status-heading" className="mt-3 text-lg font-semibold text-white">
-              {forecast ? forecast.model_name.replaceAll("_", " ") : "Baseline unavailable"}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              {forecast
-                ? "Experimental " + forecast.forecast_year + " annual baseline · " +
-                  format(forecast.predicted_accidents) + " accidents"
-                : "The legacy annual baseline endpoint has not returned a prediction."}
-            </p>
-            {forecast && (
-              <p className="mt-4 text-xs text-slate-500">
-                Backtest MAE {format(Math.round(forecast.validation_mae))} ·
-                RMSE {format(Math.round(forecast.validation_rmse))}
+        <section aria-labelledby="statewide-heading" className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.17em] text-cyan-300">
+                Separately reported · Tamil Nadu statewide
               </p>
-            )}
+              <h2 id="statewide-heading" className="mt-2 text-2xl font-semibold text-white">
+                Statewide history &amp; forecast
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                The statewide series has different geographic coverage from the imported
+                accident metrics in the cards above. These totals are not combined.
+              </p>
+            </div>
+            <div className="text-right text-xs text-slate-400">
+              Latest statewide record: <strong className="text-white">
+                {latestStatewide ? latestStatewide.year +
+                  (latestStatewide.provisional ? " (provisional)" : "") : "unavailable"}
+              </strong>
+            </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
-            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
-              <Database className="h-4 w-4" /> Historical detail
-            </p>
-            <h2 className="mt-3 text-lg font-semibold text-white">
-              {accidents ? accidents.year + " severity profile" : "Severity data unavailable"}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              {accidents
-                ? format(accidents.fatal_accidents) + " fatal crashes · " +
-                  format(accidents.grievous_injury_accidents) + " grievous injury crashes"
-                : "The accident summary API is currently unavailable."}
-            </p>
-            <p className="mt-4 text-xs text-slate-500">
-              Historical reporting; this may be a different series or period from the statewide data above.
-            </p>
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(290px,0.75fr)]">
+            <StatewideHistoryChart records={statewideRecords} />
+            <aside className="urban-panel p-6">
+              <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-cyan-300">
+                <Database className="h-4 w-4" /> Statewide data context
+              </p>
+              <h3 className="mt-3 text-xl font-semibold text-white">Source and coverage</h3>
+              <dl className="mt-5 space-y-4 text-sm">
+                <div className="flex justify-between gap-3 border-b border-white/10 pb-3">
+                  <dt className="text-slate-400">Reported years</dt>
+                  <dd className="text-white">{statewideRecords.length || "—"}</dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-white/10 pb-3">
+                  <dt className="text-slate-400">Latest accidents</dt>
+                  <dd className="text-white">{displayCount(latestStatewide?.total_accidents)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-white/10 pb-3">
+                  <dt className="text-slate-400">Latest deaths</dt>
+                  <dd className="text-white">{displayCount(latestStatewide?.persons_killed)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-white/10 pb-3">
+                  <dt className="text-slate-400">2024 district revision</dt>
+                  <dd className="text-amber-200">Unresolved</dd>
+                </div>
+              </dl>
+              <p className="mt-5 text-xs leading-6 text-slate-400">
+                Provisional source years may change. No district-level or road-level probability
+                model is approved from this history.
+              </p>
+            </aside>
           </div>
-          <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.035] p-5">
-            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-amber-200">
-              <ShieldAlert className="h-4 w-4" /> Validation guardrail
-            </p>
-            <h2 className="mt-3 text-lg font-semibold text-white">No calibrated road-risk percentage</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              We still need authorized time-and-location crash records, exposure data,
-              and independent validation before rating individual roads or areas.
-            </p>
-          </div>
-        </section>
-
-        <div id="statewide-forecast" className="scroll-mt-24">
           <StatewideForecastPanel forecast={statewideForecast} history={statewideRecords} />
-        </div>
+        </section>
 
         <div id="district-comparison" className="scroll-mt-24">
           <DistrictAccidentComparison />
         </div>
 
-        <section className="mt-9 grid gap-3 md:grid-cols-3">
+        <section className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { icon: Workflow, title: "Data Engineering", desc: "Docker ingestion, PostgreSQL storage, dbt transformations and data-quality controls." },
-            { icon: BarChart3, title: "Analytics", desc: "Observed accident history, severity breakdowns and reporting-area comparisons." },
-            { icon: BrainCircuit, title: "Data Science", desc: "Chronological backtests, transparent baseline models and clear research limitations." },
-          ].map(({ icon: Icon, title, desc }) => (
-            <article key={title} className="rounded-2xl border border-white/[0.08] p-5">
+            { icon: Workflow, title: "Data engineering", detail: "Ingestion, PostgreSQL, dbt transformations and data-quality controls." },
+            { icon: Database, title: "Research analytics", detail: "Observed trends, severity profiles and geographic comparisons." },
+            { icon: BrainCircuit, title: "Experimental models", detail: "Chronological backtesting, transparent baselines and readiness safeguards." },
+          ].map(({ icon: Icon, title, detail }) => (
+            <article key={title} className="urban-panel p-5">
               <Icon className="h-5 w-5 text-cyan-300" />
               <h3 className="mt-4 font-semibold text-white">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-400">{desc}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{detail}</p>
             </article>
           ))}
         </section>
-
-        <footer className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-6 text-xs text-slate-500">
-          <span>UrbanPulse · Road safety research and environmental context</span>
-          <Link className="text-cyan-300 hover:text-white" href="/forecast/evaluation">
-            View research limitations <ArrowUpRight className="inline h-3.5 w-3.5" />
+        <footer className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-cyan-300/15 py-6 text-xs text-slate-400">
+          <span>UrbanPulse · Urban accident intelligence · Research prototype</span>
+          <Link href="/forecast/evaluation" className="text-cyan-200 transition hover:text-white">
+            Model evaluation &amp; limitations <ArrowUpRight className="inline h-3.5 w-3.5" />
           </Link>
         </footer>
       </div>
