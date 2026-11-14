@@ -28,6 +28,41 @@ The legacy 1998–2025 accident source described below is a **different dataset
 with different scope**; do not compare its forecast totals directly with the
 Tamil Nadu statewide forecast.
 
+## New: quarantined district research staging (2016–2024)
+
+Phase 1 preserves the **331 district/city reporting-area observations** and
+a nine-year transcription balance check separately from production data.
+The data is intentionally **NOT approved for district ML training**: reporting
+boundaries are unverified and the 2024 district booklet (67,183 accidents)
+differs from later statewide reports (67,526). Existing
+`analytics.tn_district_accidents`, statewide tables, APIs, and forecasts are untouched.
+
+From the repository root, use the Docker ingestion image (the database
+container must be healthy). The first command only checks local files:
+
+```powershell
+docker compose --profile jobs build ingestion
+docker compose --profile jobs run --rm ingestion python ingestion/import_tn_district_research.py
+docker compose --profile jobs run --rm ingestion python ingestion/import_tn_district_research.py --apply
+```
+
+The explicit `--apply` creates/inserts into **staging only**, in one
+transaction, with idempotent source-hash versioning and stored annual checks.
+It does not train or update predictions. Verify the persisted counts:
+
+```powershell
+docker compose exec db psql -U urbanpulse -d urbanpulse -c "SELECT year, COUNT(*) AS rows, SUM(total_accidents) AS accidents, SUM(total_deaths) AS deaths FROM staging.tn_district_research_rows GROUP BY year ORDER BY year;"
+```
+
+Run offline tests:
+
+```powershell
+python -m unittest discover -s ingestion/tests -v
+```
+
+See [district research staging guide](docs/tn_district_research_staging.md)
+for data sources, digest controls, limitations, and the next release gate.
+
 ## Current pipeline
 
 ```text
