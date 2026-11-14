@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Activity, BarChart3, FlaskConical, Map, RadioTower } from "lucide-react";
+import { Activity, BarChart3, CloudRain, FlaskConical, Map, RadioTower } from "lucide-react";
 
 type Props = {
-  active?: "dashboard" | "map" | "districts" | "evaluation";
+  active?: "dashboard" | "map" | "districts" | "evaluation" | "conditions";
 };
 
 export default function SiteNav({ active = "dashboard" }: Props) {
@@ -56,8 +56,20 @@ export default function SiteNav({ active = "dashboard" }: Props) {
             <span className="hidden md:inline">Evaluation</span>
           </Link>
           <Link
+            href="/conditions"
+            aria-label="Live Conditions"
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition sm:px-3 ${
+              active === "conditions"
+                ? "bg-white/10 text-white"
+                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+            }`}
+          >
+            <CloudRain className="h-4 w-4" />
+            <span className="hidden lg:inline">Live Conditions</span>
+          </Link>
+          <Link
             href="/map"
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition sm:px-3 ${
               active === "map"
                 ? "bg-white/10 text-white"
                 : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
