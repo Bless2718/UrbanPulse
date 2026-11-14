@@ -206,6 +206,216 @@ body {
   border-color: rgba(16, 223, 255, .87);
   box-shadow: 0 0 17px rgba(0, 223, 255, .15);
 }
+
+/* Shared neon visual language for District Lab, Evaluation, Live Conditions and Map. */
+.urban-subpage {
+  --page-cyan: #37eafb;
+  --page-deep: #041a30;
+  --page-border: rgba(64, 216, 250, .46);
+}
+.urban-page-hero {
+  isolation: isolate;
+}
+.urban-page-hero > div:first-child {
+  border-radius: 18px;
+}
+.urban-page-hero > div:first-child::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 3% 14%;
+  width: 70%;
+  height: 1px;
+  z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(0, 214, 255, .35), transparent);
+  box-shadow: 0 0 16px rgba(0, 226, 255, .3);
+}
+.urban-subpage-radar {
+  pointer-events: none;
+  position: absolute;
+  height: 135%;
+  width: 80%;
+  min-width: 550px;
+  top: -16%;
+  right: -18%;
+  z-index: 0;
+  opacity: .62;
+  mask-image: linear-gradient(90deg, transparent 0%, black 44%, black 85%, transparent 100%);
+}
+.urban-spotlight-sheen {
+  position: absolute;
+  pointer-events: none;
+  width: 190%;
+  height: 125%;
+  left: -35%;
+  bottom: -98%;
+  border: 1px solid rgba(0, 239, 255, .64);
+  border-radius: 50%;
+  transform: rotate(-16deg);
+  box-shadow:
+    0 0 11px rgba(0, 239, 255, .55),
+    inset 0 0 25px rgba(0, 239, 255, .14);
+}
+.urban-subpage .urban-map-card {
+  border-color: rgba(35, 209, 241, .7);
+}
+.urban-subpage .urban-panel {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(20, 126, 189, .10), transparent 54%),
+    linear-gradient(146deg, rgba(12, 48, 68, .79), rgba(3, 19, 39, .96) 55%, rgba(6, 41, 65, .72));
+}
+.urban-subpage .urban-chart-panel {
+  border-color: rgba(56, 205, 238, .54);
+  background:
+    radial-gradient(circle at 96% 100%, rgba(4, 179, 231, .14), transparent 47%),
+    linear-gradient(140deg, rgba(7, 43, 65, .92), rgba(3, 16, 34, .98));
+}
+.urban-subpage .urban-research-notice {
+  background: linear-gradient(102deg, rgba(65, 44, 8, .39), rgba(6, 22, 41, .88));
+  border-color: rgba(246, 185, 64, .46);
+  box-shadow: inset 0 0 18px rgba(235, 174, 64, .055);
+}
+.urban-subpage .urban-confirm-card {
+  border-color: rgba(20, 221, 236, .49);
+  background: linear-gradient(105deg, rgba(3, 67, 84, .54), rgba(3, 27, 47, .85));
+}
+.urban-subpage .urban-metric-card {
+  border-color: rgba(41, 202, 232, .48);
+  background:
+    radial-gradient(circle at 100% 100%, rgba(4, 173, 211, .17), transparent 53%),
+    linear-gradient(150deg, rgba(9, 59, 77, .88), rgba(3, 21, 40, .94));
+  box-shadow: inset 0 0 16px rgba(0, 225, 255, .065),
+    0 7px 25px rgba(0, 6, 19, .34);
+}
+.urban-subpage .urban-metric-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  width: 115px;
+  height: 115px;
+  right: -70px;
+  bottom: -81px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 245, 255, .37);
+  box-shadow: 0 0 16px rgba(0, 245, 255, .21);
+}
+.urban-subpage .urban-amber-card {
+  border-color: rgba(234, 189, 94, .44);
+  background: linear-gradient(140deg, rgba(74, 51, 12, .28), rgba(4, 27, 47, .94));
+}
+.urban-subpage .urban-amber-card::after {
+  border-color: rgba(252, 211, 77, .5);
+  box-shadow: 0 0 16px rgba(251, 191, 36, .21);
+}
+.urban-action-link {
+  border: 1px solid rgba(37, 213, 247, .42);
+  border-radius: 12px;
+  color: #aaf8ff;
+  background: linear-gradient(135deg, rgba(2, 135, 176, .19), rgba(4, 32, 61, .7));
+  box-shadow: inset 0 1px 0 rgba(147, 243, 255, .1);
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.urban-action-link:hover,
+.urban-action-link:focus-visible {
+  border-color: rgba(40, 236, 255, .9);
+  background: linear-gradient(120deg, rgba(0, 159, 207, .28), rgba(6, 59, 103, .92));
+  box-shadow: 0 0 16px rgba(0, 217, 255, .19);
+  color: white;
+}
+.urban-back-link:hover { color: #93f7ff; }
+.urban-evidence-pill {
+  border: 1px solid rgba(31, 206, 225, .38);
+  background: rgba(0, 161, 203, .1);
+  border-radius: 999px;
+}
+.urban-select {
+  color: #ecfeff;
+  border: 1px solid rgba(68, 192, 223, .45);
+  background: linear-gradient(120deg, #061e34, #06182e);
+  box-shadow: inset 0 1px 4px rgba(0, 206, 252, .09);
+}
+.urban-select:focus-visible,
+.urban-subpage input:focus-visible,
+.urban-primary-button:focus-visible,
+.urban-action-link:focus-visible {
+  outline: 2px solid #5ef5ff;
+  outline-offset: 3px;
+}
+.urban-select:hover { border-color: rgba(44, 219, 246, .78); }
+.urban-primary-button {
+  border: 1px solid rgba(0, 235, 255, .7);
+  background: linear-gradient(133deg, rgba(0, 186, 224, .65), rgba(15, 77, 151, .96));
+  box-shadow: inset 0 0 13px rgba(4, 227, 255, .13), 0 0 15px rgba(0, 212, 255, .19);
+}
+.urban-primary-button:hover {
+  box-shadow: inset 0 0 19px rgba(4, 227, 255, .2), 0 0 20px rgba(0, 212, 255, .32);
+}
+.urban-inner-panel {
+  border: 1px solid rgba(69, 169, 200, .23);
+  background: linear-gradient(130deg, rgba(2, 20, 39, .9), rgba(6, 37, 58, .48));
+}
+.urban-chart-surface {
+  border: 1px solid rgba(73, 172, 209, .3);
+  background:
+    linear-gradient(0deg, rgba(0, 182, 221, .045), transparent 60%),
+    rgba(1, 10, 27, .68);
+}
+.urban-subpage .urban-chart-surface svg path[stroke="#22d3ee"],
+.urban-subpage .urban-chart-surface svg path[stroke="#00eaff"] {
+  filter: drop-shadow(0 0 4px rgba(19, 234, 255, .45));
+}
+.urban-subpage table {
+  font-variant-numeric: tabular-nums;
+}
+.urban-subpage table thead {
+  background: rgba(0, 145, 193, .04);
+}
+.urban-subpage table tbody tr {
+  transition: background-color .15s ease;
+}
+.urban-subpage table tbody tr:hover {
+  background: rgba(6, 179, 221, .075);
+}
+.urban-subpage .urban-location-card {
+  border: 1px solid rgba(42, 180, 219, .28);
+  background: linear-gradient(135deg, rgba(1, 19, 39, .89), rgba(6, 51, 68, .65));
+  box-shadow: inset 0 0 14px rgba(0, 185, 241, .035);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.urban-subpage .urban-location-card:hover {
+  border-color: rgba(59, 230, 255, .65);
+  transform: translateY(-2px);
+}
+.urban-subpage .urban-map-frame {
+  border-color: rgba(0, 202, 242, .6);
+  padding: 4px;
+  background: linear-gradient(125deg, #045171, #010a20 55%, #05617a);
+  box-shadow: 0 0 16px rgba(0, 208, 245, .23), 0 16px 35px rgba(0, 8, 22, .54);
+}
+.urban-map-legend {
+  border: 1px solid rgba(0, 225, 255, .52);
+  background: rgba(1, 20, 39, .92);
+  box-shadow: 0 0 17px rgba(0, 209, 255, .15);
+}
+.urban-subpage .leaflet-container {
+  border-radius: 14px;
+}
+.urban-subpage .leaflet-popup-content-wrapper {
+  box-shadow: 0 0 18px rgba(3, 194, 234, .28);
+}
+@media (max-width: 1023px) {
+  .urban-subpage-radar { opacity: .39; right: -35%; }
+}
+@media (max-width: 639px) {
+  .urban-subpage-radar { opacity: .19; right: -70%; }
+  .urban-subpage .urban-location-card:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .urban-subpage .urban-location-card,
+  .urban-action-link,
+  .urban-subpage table tbody tr { transition: none; }
+  .urban-subpage .urban-location-card:hover { transform: none; }
+}
+
 @media (max-width: 1023px) {
   .urban-hero-geo { right: -7%; width: 55%; opacity: .4; }
 }
