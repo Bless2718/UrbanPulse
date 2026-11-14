@@ -63,6 +63,34 @@ python -m unittest discover -s ingestion/tests -v
 See [district research staging guide](docs/tn_district_research_staging.md)
 for data sources, digest controls, limitations, and the next release gate.
 
+## Phase 4: historical Forecast Evaluation dashboard (research only)
+
+A new **Forecast Evaluation** page at `/forecast/evaluation` displays
+historical held-out actual-vs-predicted accident counts, MAE/RMSE/WAPE,
+and three-baseline comparisons for the 42 quarantined district/group
+candidates. It is linked from the navigation and District Lab. No
+unverified series becomes model-ready, and no 2026 district forecast
+is published.
+
+The page reads a **separately generated** local Phase 3 JSON file from
+`reports/tn_district_backtest.json`, never the production forecast API.
+Generate the JSON, rebuild the web container and open the page:
+
+```powershell
+New-Item -ItemType Directory -Force .\reports | Out-Null
+docker compose --profile jobs run --rm -v "${PWD}/reports:/app/reports" ingestion python ingestion/backtest_tn_district_experiments.py --output /app/reports/tn_district_backtest.json
+docker compose up -d --build web api
+```
+
+Replace the Docker bind mount with your normal PowerShell working-directory
+expansion as shown; this is an export, not a production database update.
+The Compose web service mounts the local reports directory **read-only**.
+Open `http://localhost:3000/forecast/evaluation`; when the report is
+missing or fails safety validation, the page shows a clear explanation
+without made-up accuracy metrics.
+
+See the [Phase 4 setup, data validation, and known limitations](docs/tn_district_forecast_evaluation_phase4.md).
+
 ## Phase 3: offline district forecasting experiments (NOT production)
 
 A separate **read-only experimental ML lab** compares persistence,

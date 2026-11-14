@@ -24,3 +24,5 @@ data/processed/*
 ml/artifacts/
 *.joblib
 *.pkl
+# Generated Phase 3/4 research reports: local artifacts, not model-ready data
+reports/

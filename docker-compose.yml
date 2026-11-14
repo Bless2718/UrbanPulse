@@ -88,6 +88,9 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       API_INTERNAL_URL: http://api:8000
+      TN_DISTRICT_BACKTEST_REPORT_PATH: /app/reports/tn_district_backtest.json
+    volumes:
+      - ./reports:/app/reports:ro
     ports:
       - "3000:3000"
     depends_on:
