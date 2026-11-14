@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r ingestion/requirements.txt
 COPY ingestion ./ingestion
 COPY pipelines ./pipelines
 COPY data ./data
+COPY sql ./sql
 
 ENV PYTHONUNBUFFERED=1
 
