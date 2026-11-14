@@ -90,7 +90,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
   return (
     <div className="mt-8 space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.055] p-5">
+        <div className="urban-panel urban-metric-card relative overflow-hidden p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-cyan-300">Statewide ML forecast</p>
           <p className="mt-3 text-3xl font-semibold text-white">
             {statewideForecast ? nf(statewideForecast.predicted_accidents) : "Unavailable"}
@@ -104,14 +104,14 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
             Full statewide forecast <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+        <div className="urban-panel urban-metric-card relative overflow-hidden p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">District data coverage</p>
           <p className="mt-3 text-3xl font-semibold text-white">{availableYears.length} <span className="text-lg text-slate-400">years</span></p>
           <p className="mt-2 text-xs text-slate-400">
             {availableYears.length ? availableYears[0] + "–" + latestYear : "No district data"} · {totalLatest} reporting areas in latest year
           </p>
         </div>
-        <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.035] p-5">
+        <div className="urban-panel urban-metric-card urban-amber-card relative overflow-hidden p-5">
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-amber-200">
             <ShieldAlert className="h-4 w-4" /> District forecast status
           </p>
@@ -122,7 +122,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
         </div>
       </div>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7" aria-labelledby="district-lab-heading">
+      <section className="urban-panel urban-chart-panel p-5 sm:p-7" aria-labelledby="district-lab-heading">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
@@ -142,7 +142,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
               id="district-choice"
               value={district}
               onChange={(event) => setSelectedDistrict(event.target.value)}
-              className="max-w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-2 text-sm text-white"
+              className="urban-select max-w-full rounded-xl px-4 py-2 text-sm text-white"
               disabled={!districts.length}
             >
               {districts.map((name) => <option key={name} value={name}>{name}</option>)}
@@ -157,15 +157,15 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
         ) : (
           <>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+              <div className="urban-inner-panel rounded-xl p-4">
                 <p className="text-xs text-slate-500">{latest.year} reported accidents</p>
                 <p className="mt-2 text-2xl font-semibold text-white">{nf(latest.total_accidents)}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+              <div className="urban-inner-panel rounded-xl p-4">
                 <p className="text-xs text-slate-500">{latest.year} reported deaths</p>
                 <p className="mt-2 text-2xl font-semibold text-white">{nf(latest.total_deaths)}</p>
               </div>
-              <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.035] p-4">
+              <div className="urban-research-notice rounded-xl p-4">
                 <p className="text-xs text-amber-200">2026 what-if scenario</p>
                 <p className="mt-2 text-2xl font-semibold text-amber-100">
                   {scenario.length ? nf(scenario[scenario.length - 1].total) : "—"}
@@ -174,7 +174,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
               </div>
             </div>
 
-            <div className="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4">
+            <div className="urban-inner-panel mt-6 rounded-xl p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <label htmlFor="district-growth" className="text-sm font-medium text-white">
                   Assumed annual accident change
@@ -191,7 +191,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
                 step="1"
                 value={annualChange}
                 onChange={(event) => setAnnualChange(Number(event.target.value))}
-                className="mt-4 w-full accent-amber-300"
+                className="urban-slider mt-4 w-full accent-cyan-300"
               />
               <div className="mt-2 flex justify-between text-xs text-slate-500">
                 <span>−15% per year</span><span>0% (flat)</span><span>+15% per year</span>
@@ -202,7 +202,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
               </p>
             </div>
 
-            <div className="mt-6 overflow-x-auto rounded-xl border border-white/10 p-3" tabIndex={0} aria-label="Scrollable district historical and scenario chart">
+            <div className="urban-chart-surface mt-6 overflow-x-auto rounded-xl p-3" tabIndex={0} aria-label="Scrollable district historical and scenario chart">
               <svg viewBox={"0 0 " + w + " " + h} className="min-w-[540px] w-full" role="img" aria-label={district + " observed annual accident totals and hypothetical scenario to 2026"}>
                 {[0, 1, 2, 3, 4].map((tick) => {
                   const value = ceiling * tick / 4;
@@ -245,7 +245,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
         )}
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7" aria-labelledby="district-comparison-heading">
+      <section className="urban-panel urban-chart-panel p-5 sm:p-7" aria-labelledby="district-comparison-heading">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
@@ -259,14 +259,14 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
               <label htmlFor="ranking-year" className="mb-1 block text-xs text-slate-400">Year</label>
               <select id="ranking-year" value={availableYears.includes(rankingYear) ? rankingYear : latestYear}
                 onChange={(e) => { setRankingYear(Number(e.target.value)); setShowAll(false); }}
-                className="rounded-lg border border-white/15 bg-slate-900 px-3 py-2 text-sm text-white">
+                className="urban-select rounded-lg px-3 py-2 text-sm text-white">
                 {availableYears.map((year) => <option key={year} value={year}>{year}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="ranking-metric" className="mb-1 block text-xs text-slate-400">Metric</label>
               <select id="ranking-metric" value={metric} onChange={(e) => setMetric(e.target.value as typeof metric)}
-                className="rounded-lg border border-white/15 bg-slate-900 px-3 py-2 text-sm text-white">
+                className="urban-select rounded-lg px-3 py-2 text-sm text-white">
                 <option value="total_accidents">Accidents</option>
                 <option value="total_deaths">Deaths</option>
               </select>
@@ -295,7 +295,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
             </div>
             {ranking.length > 10 && (
               <button type="button" onClick={() => setShowAll(!showAll)}
-                className="mt-6 rounded-xl border border-cyan-400/20 px-4 py-2 text-sm text-cyan-300 hover:bg-cyan-400/10">
+                className="urban-primary-button mt-6 rounded-xl px-4 py-2 text-sm text-white">
                 {showAll ? "Show top 10" : "Show all reporting areas"}
               </button>
             )}
@@ -303,7 +303,7 @@ export default function DistrictForecastLab({ records, statewideForecast }: Prop
         ) : <p className="mt-5 text-sm text-slate-400">No district data available for this year.</p>}
       </section>
 
-      <div className="rounded-2xl border border-white/10 p-5 text-sm text-slate-400">
+      <div className="urban-panel p-5 text-sm text-slate-300">
         <div className="flex items-center gap-2 font-medium text-white"><Activity className="h-4 w-4 text-cyan-300" /> Next step for real district forecasting</div>
         <p className="mt-2 leading-6">
           Extend district-level observations beyond 2023, reconcile district and city jurisdiction names, and validate
