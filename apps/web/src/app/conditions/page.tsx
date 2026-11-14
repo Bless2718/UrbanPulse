@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Activity, AlertTriangle, ArrowUpRight, CloudRain, Compass, Droplets, Eye, MoonStar, Sun, Wind } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
+import NeonPageHero from "@/components/NeonPageHero";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -111,30 +112,38 @@ export default async function LiveConditionsPage({ searchParams }: PageProps) {
     { icon: MoonStar, label: "Day or night", value: current?.is_day === true ? "Day" : current?.is_day === false ? "Night" : "Unavailable", note: "Weather-model day/night flag" },
   ];
   return (
-    <main className="min-h-screen">
+    <main className="urban-shell urban-subpage min-h-screen">
       <SiteNav active="conditions" />
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <Link href="/forecast/districts" className="text-sm text-slate-400 hover:text-white">
-          ← Back to District Lab
+      <div className="relative z-[1] mx-auto max-w-[1470px] px-4 py-7 sm:px-6 lg:px-8">
+        <Link href="/" className="urban-back-link inline-flex items-center gap-2 text-sm text-slate-300">
+          ← Dashboard
         </Link>
-        <div className="mt-7 flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1.5 text-xs uppercase tracking-[0.13em] text-cyan-300">
-              <Activity className="h-4 w-4" /> Live environmental context
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Tamil Nadu Live Conditions
-            </h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-              Inspect updated weather estimates for six Tamil Nadu city centres.
-              Rain, visibility, wind and time of day may be relevant to road conditions,
-              but this is <strong className="text-slate-200">not a predicted accident probability</strong>.
-            </p>
-          </div>
-          <CloudRain className="h-8 w-8 text-cyan-300" />
+        <div className="mt-5">
+          <NeonPageHero
+            eyebrow="Live environmental intelligence"
+            title="Tamil Nadu"
+            accent="live conditions."
+            icon={CloudRain}
+            description="Inspect live weather-grid estimates and short-term outlooks for six Tamil Nadu city centres. Conditions are useful context, but they cannot establish an accident danger percentage."
+            spotlightLabel="Selected city centre"
+            spotlightTitle={city}
+            spotlightText={weather
+              ? "Open-Meteo estimate valid at " + hour(weather.weather_valid_at_local) +
+                ". Updated when you load or select a city."
+              : "Weather feed unavailable or stale. No placeholder measurements are shown."}
+            spotlightIcon={Compass}
+          />
+        </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/map" className="urban-action-link inline-flex items-center gap-2 px-4 py-2.5 text-sm">
+            <Compass className="h-4 w-4" /> Geospatial explorer <ArrowUpRight className="h-4 w-4" />
+          </Link>
+          <Link href="/forecast/evaluation" className="urban-action-link inline-flex items-center gap-2 px-4 py-2.5 text-sm">
+            Historical model evaluation <ArrowUpRight className="h-4 w-4" />
+          </Link>
         </div>
 
-        <section role="note" className="mt-7 rounded-2xl border border-amber-300/25 bg-amber-300/[0.04] p-5">
+        <section role="note" className="urban-research-notice mt-5 p-5">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
             <div>
@@ -149,24 +158,24 @@ export default async function LiveConditionsPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        <form method="get" action="/conditions" className="mt-7 flex flex-wrap items-end gap-3 rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+        <form method="get" action="/conditions" className="urban-panel mt-6 flex flex-wrap items-end gap-4 p-5">
           <div className="w-full max-w-sm">
             <label htmlFor="conditions-city" className="mb-2 block text-xs uppercase tracking-wider text-slate-400">
               Choose weather-grid city centre
             </label>
             <select id="conditions-city" name="city" defaultValue={city}
-              className="w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-sm text-white">
+              className="urban-select w-full rounded-xl px-4 py-3 text-sm text-white">
               {CITIES.map(name => <option key={name} value={name}>{name}</option>)}
             </select>
           </div>
           <button type="submit"
-            className="rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-5 py-3 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/20">
+            className="urban-primary-button rounded-xl px-5 py-3 text-sm font-semibold text-white transition">
             View live conditions
           </button>
           <p className="text-xs text-slate-500">Weather updates when you reload or select a city.</p>
         </form>
 
-        {error && <section role="status" className="mt-6 rounded-2xl border border-amber-300/25 p-5 text-sm text-amber-200">
+        {error && <section role="status" className="urban-research-notice mt-6 p-5 text-sm text-amber-200">
           {error} Past observations and forecast values have not been substituted.
         </section>}
 
@@ -184,7 +193,7 @@ export default async function LiveConditionsPage({ searchParams }: PageProps) {
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {metrics.map(({ icon: Icon, label, value, note }) =>
-              <article key={label} className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+              <article key={label} className="urban-panel urban-metric-card relative overflow-hidden p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500">
                   <Icon className="h-4 w-4 text-cyan-300" /> {label}
                 </div>
@@ -194,7 +203,7 @@ export default async function LiveConditionsPage({ searchParams }: PageProps) {
             )}
           </div>
 
-          <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7">
+          <section className="urban-panel urban-chart-panel p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-wider text-cyan-300">Weather forecast · contextual only</p>
@@ -235,7 +244,7 @@ export default async function LiveConditionsPage({ searchParams }: PageProps) {
           </section>
 
           <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 p-5">
+            <div className="urban-panel p-5">
               <p className="text-sm font-semibold text-white">Live accident incidents</p>
               <p className="mt-2 text-sm text-amber-200">Unavailable</p>
               <p className="mt-2 text-xs leading-6 text-slate-400">No verified Tamil Nadu public live incident API is connected. “Unavailable” does not mean zero crashes.</p>
