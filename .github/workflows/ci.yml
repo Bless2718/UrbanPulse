@@ -72,3 +72,5 @@ jobs:
       - run: python ingestion/import_tn_district_research.py --apply
       - run: python ingestion/import_tn_district_research.py --apply
       - run: python -m unittest discover -s ingestion/tests -p test_tn_district_research_integration.py -v
+      - run: python ingestion/reconcile_tn_district_research.py --install-views --output /tmp/tn_district_reconciliation.json
+      - run: python -m unittest discover -s ingestion/tests -p test_tn_district_reconciliation_integration.py -v
