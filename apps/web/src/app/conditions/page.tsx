@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, AlertTriangle, ArrowUpRight, CloudRain, Compass, Database, Droplets, Eye, MoonStar, Sun, Wind } from "lucide-react";
+import { Activity, AlertTriangle, ArrowUpRight, CloudRain, Compass, Droplets, Eye, MoonStar, Sun, Wind } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
 
