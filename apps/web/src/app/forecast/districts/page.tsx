@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, BrainCircuit, FlaskConical } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, BrainCircuit, CloudRain, FlaskConical } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
 import DistrictForecastLab, { type DistrictAccidentRecord } from "@/components/DistrictForecastLab";
@@ -73,6 +73,12 @@ export default async function DistrictForecastPage() {
           className="mt-6 inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-3 text-sm text-cyan-200 transition hover:border-cyan-400/40 hover:bg-cyan-400/10">
           <BarChart3 className="h-4 w-4" />
           Explore historical model evaluation
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
+        <Link href="/conditions"
+          className="ml-0 mt-3 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-cyan-200 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] sm:ml-3">
+          <CloudRain className="h-4 w-4" />
+          View live Tamil Nadu weather context
           <ArrowUpRight className="h-4 w-4" />
         </Link>
         {districtDataUnavailable && (
