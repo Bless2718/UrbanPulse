@@ -63,6 +63,26 @@ python -m unittest discover -s ingestion/tests -v
 See [district research staging guide](docs/tn_district_research_staging.md)
 for data sources, digest controls, limitations, and the next release gate.
 
+## Phase 2: district boundary and source-revision investigation
+
+District research **remains quarantined**. The new reconciliation review
+generates four exploratory parent-area histories and flags exceptional
+year-on-year changes, missing group components, and the unresolved 2024
+statewide-versus-district revision. It does **not** create a model-ready
+district dataset or change existing predictions.
+
+Run after Phase 1 import:
+
+```powershell
+docker compose --profile jobs build ingestion
+docker compose --profile jobs run --rm ingestion python ingestion/reconcile_tn_district_research.py --install-views
+```
+
+This creates review-only PostgreSQL **views** in the separate
+`research_review` schema, then prints a JSON investigation report. Subsequent
+runs without `--install-views` use SELECT only. See
+[Phase 2 evidence, caveats, runbook and approval gates](docs/tn_district_reconciliation_phase2.md).
+
 ## Current pipeline
 
 ```text
