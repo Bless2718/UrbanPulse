@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Activity, Map, RadioTower } from "lucide-react";
+import { Activity, FlaskConical, Map, RadioTower } from "lucide-react";
 
 type Props = {
-  active?: "dashboard" | "map";
+  active?: "dashboard" | "map" | "districts";
 };
 
 export default function SiteNav({ active = "dashboard" }: Props) {
@@ -30,6 +30,18 @@ export default function SiteNav({ active = "dashboard" }: Props) {
           >
             <Activity className="h-4 w-4" />
             Dashboard
+          </Link>
+          <Link
+            href="/forecast/districts"
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+              active === "districts"
+                ? "bg-white/10 text-white"
+                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+            }`}
+          >
+            <FlaskConical className="h-4 w-4" />
+            <span className="hidden sm:inline">District Lab</span>
+            <span className="sm:hidden">Lab</span>
           </Link>
           <Link
             href="/map"
