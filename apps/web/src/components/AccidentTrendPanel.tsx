@@ -48,6 +48,17 @@ export default function AccidentTrendPanel({ trend, forecast }: Props) {
   const x = (index: number) => l + (plotted <= 1 ? (w - l - r) / 2 : index * (w - l - r) / (plotted - 1));
   const y = (value: number) => t + (h - t - b) * (1 - value / ceiling);
   const points = observed.map((row, i) => ({ ...row, x: x(i), y: y(row.total_accidents) }));
+  // Separate filled regions at missing years too, so the cyan area
+  // never implies that an unobserved year was measured.
+  const areaGroups: typeof points[] = [];
+  for (const point of points) {
+    let group = areaGroups[areaGroups.length - 1];
+    if (!group || point.year !== group[group.length - 1].year + 1) {
+      group = [];
+      areaGroups.push(group);
+    }
+    group.push(point);
+  }
   const lineSegments: string[] = [];
   for (let i = 1; i < points.length; i++) {
     // Do not connect across missing source years or infer intermediate values.
@@ -121,12 +132,13 @@ export default function AccidentTrendPanel({ trend, forecast }: Props) {
                     fontSize="11" fill="#b8cbe2">{formatCount(Math.round(value))}</text>
                 </g>;
               })}
-              {observed.length > 1 && (
-                <path d={points.map((p, i) => (i ? "L " : "M ") + p.x + " " + p.y).join(" ") +
-                  " L " + points[points.length-1].x + " " + y(0) +
-                  " L " + points[0].x + " " + y(0) + " Z"}
+              {areaGroups.filter((group) => group.length > 1).map((group, index) => (
+                <path key={"fill-" + index}
+                  d={group.map((p, i) => (i ? "L " : "M ") + p.x + " " + p.y).join(" ") +
+                    " L " + group[group.length-1].x + " " + y(0) +
+                    " L " + group[0].x + " " + y(0) + " Z"}
                   fill="url(#urban-trend-fill)" opacity=".65" />
-              )}
+              ))}
               {lineSegments.map((segment, index) => <g key={index}>
                 <path d={segment} stroke="#00f2ff" strokeWidth="8" strokeOpacity=".23" filter="url(#urban-trend-glow)" />
                 <path d={segment} stroke="#22e9fb" strokeWidth="3" strokeLinecap="round" />
