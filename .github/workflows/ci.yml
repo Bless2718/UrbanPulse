@@ -44,6 +44,7 @@ jobs:
           python-version: "3.12"
       - run: python -m unittest discover -s ingestion/tests -v
       - run: python ingestion/import_tn_district_research.py
+      - run: python ingestion/audit_tn_published_2021_2023.py
 
   district_staging_postgres:
     runs-on: ubuntu-latest

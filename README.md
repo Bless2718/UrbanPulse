@@ -63,6 +63,26 @@ python -m unittest discover -s ingestion/tests -v
 See [district research staging guide](docs/tn_district_research_staging.md)
 for data sources, digest controls, limitations, and the next release gate.
 
+## Published accident-count verification (2021–2023)
+
+A separate Firecrawl-assisted, publication-to-publication audit compared
+the existing Tamil Nadu research extract with OpenCity's government-derived
+district accident/death CSV. **113/113 available district-year pairs
+match exactly** across 2021–2023 (37 + 38 + 38). Mayiladuthurai 2021 is
+marked NA, not zero.
+
+```powershell
+docker compose --profile jobs build ingestion
+docker compose --profile jobs run --rm ingestion python ingestion/audit_tn_published_2021_2023.py
+```
+
+This verifies **transcription consistency only**. The 2019 district splits,
+2022 step changes and disputed 2024 revision remain unverified;
+**0/42 series** are approved for future district forecasting. The existing
+Forecast Evaluation page now distinguishes the checked source counts from
+model readiness. See the [source-by-source review and remaining approval
+gates](docs/tn_published_accident_crosscheck_2021_2023.md).
+
 ## Phase 4: historical Forecast Evaluation dashboard (research only)
 
 A new **Forecast Evaluation** page at `/forecast/evaluation` displays
