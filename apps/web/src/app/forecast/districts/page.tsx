@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BrainCircuit, FlaskConical } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, BrainCircuit, FlaskConical } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
 import DistrictForecastLab, { type DistrictAccidentRecord } from "@/components/DistrictForecastLab";
@@ -69,6 +69,12 @@ export default async function DistrictForecastPage() {
           </div>
           <BrainCircuit className="h-8 w-8 text-cyan-300" />
         </div>
+        <Link href="/forecast/evaluation"
+          className="mt-6 inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-3 text-sm text-cyan-200 transition hover:border-cyan-400/40 hover:bg-cyan-400/10">
+          <BarChart3 className="h-4 w-4" />
+          Explore historical model evaluation
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
         {districtDataUnavailable && (
           <p role="alert" className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/[0.035] p-4 text-sm text-amber-200">
             The district historical API is unavailable. Confirm the database is running and the
