@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "feature/city-hourly-risk-api"]
 
 jobs:
   frontend:
@@ -32,4 +32,43 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: pytest -q
+      - run: python -m pytest -q
+
+  district_research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s ingestion/tests -v
+      - run: python ingestion/import_tn_district_research.py
+
+  district_staging_postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: urbanpulse
+          POSTGRES_USER: urbanpulse
+          POSTGRES_PASSWORD: urbanpulse_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U urbanpulse -d urbanpulse"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+pg8000://urbanpulse:urbanpulse_dev@127.0.0.1:5432/urbanpulse
+      TN_RESEARCH_DB_TEST: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r ingestion/requirements.txt
+      - run: python ingestion/import_tn_district_research.py --apply
+      - run: python ingestion/import_tn_district_research.py --apply
+      - run: python -m unittest discover -s ingestion/tests -p test_tn_district_research_integration.py -v

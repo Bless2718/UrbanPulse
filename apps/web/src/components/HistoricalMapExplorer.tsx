@@ -42,9 +42,6 @@ export default function HistoricalMapExplorer({
     if (year === "combined") return;
 
     const controller = new AbortController();
-    setError("");
-    setLoadedYear("");
-    setRecords([]);
 
     async function load() {
       try {
@@ -116,7 +113,12 @@ export default function HistoricalMapExplorer({
           <select
             id="map-year"
             value={year}
-            onChange={(event) => setYear(event.target.value)}
+            onChange={(event) => {
+              setYear(event.target.value);
+              setError("");
+              setLoadedYear("");
+              setRecords([]);
+            }}
             className="rounded-xl border border-white/15 bg-slate-900 px-4 py-2 text-sm text-white"
           >
             <option value="combined">2020-2021 combined</option>
