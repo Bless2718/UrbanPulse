@@ -1,0 +1,29 @@
+{
+  "backtest_years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "models": {
+    "persistence": {
+      "mae": 1166.4,
+      "rmse": 2024.53,
+      "mape_pct": 28.99
+    },
+    "rolling_3y": {
+      "mae": 1799.07,
+      "rmse": 2262.4,
+      "mape_pct": 44.52
+    },
+    "linear_regression": {
+      "mae": 2137.97,
+      "rmse": 2778.27,
+      "mape_pct": 52.18
+    }
+  },
+  "selected_model": "persistence",
+  "selection_metric": "mae",
+  "structural_break_note": "The 2023 observation is a structural-break candidate. Baseline results should not be treated as a production forecast."
+}

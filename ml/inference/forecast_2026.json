@@ -1,0 +1,6 @@
+{
+  "forecast_year": 2026,
+  "predicted_accidents": 4104,
+  "model_name": "persistence",
+  "training_end_year": 2025
+}
