@@ -1,4 +1,5 @@
 import { BrainCircuit, ShieldAlert, TrendingUp } from "lucide-react";
+import ForecastInteractiveChart from "@/components/ForecastInteractiveChart";
 
 export type StatewideForecast = {
   geography: string;
@@ -32,26 +33,6 @@ type Props = {
 };
 
 export default function StatewideForecastPanel({ forecast, history }: Props) {
-  const observed = history
-    .filter((record) => Number.isFinite(record.total_accidents))
-    .slice(-5);
-  const bars = [
-    ...observed.map((record) => ({
-      year: record.year,
-      total: record.total_accidents,
-      provisional: record.provisional,
-      predicted: false,
-    })),
-    ...(forecast
-      ? [{
-          year: forecast.forecast_year,
-          total: forecast.predicted_accidents,
-          provisional: false,
-          predicted: true,
-        }]
-      : []),
-  ];
-  const maxTotal = Math.max(1, ...bars.map((row) => row.total));
   const isPersistence = forecast?.model_name === "persistence";
 
   return (
@@ -112,52 +93,10 @@ export default function StatewideForecastPanel({ forecast, history }: Props) {
             </div>
           </div>
 
-          <div className="mt-7 rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-semibold text-white">
-                Observed history vs. forecast
-              </h3>
-              <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-                <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-4 rounded-sm bg-cyan-400" />
-                  Observed
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-4 rounded-sm border border-dashed border-amber-300 bg-amber-300/20" />
-                  Forecast
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 space-y-4">
-              {bars.map((row) => (
-                <div
-                  key={`${row.year}-${row.predicted ? "forecast" : "observed"}`}
-                  className="grid grid-cols-[5rem_minmax(0,1fr)_5.5rem] items-center gap-3"
-                >
-                  <span className="text-xs text-slate-400">
-                    {row.year}{row.predicted ? " (F)" : row.provisional ? " (P)" : ""}
-                  </span>
-                  <div className="h-3 overflow-hidden rounded-full bg-white/[0.06]">
-                    <div
-                      className={
-                        row.predicted
-                          ? "h-full rounded-full border border-dashed border-amber-300 bg-amber-300/35"
-                          : "h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-400"
-                      }
-                      style={{ width: `${Math.max(2, (row.total / maxTotal) * 100)}%` }}
-                    />
-                  </div>
-                  <span className={`text-right text-sm font-medium ${row.predicted ? "text-amber-200" : "text-slate-200"}`}>
-                    {row.total.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-5 text-xs leading-5 text-slate-500">
-              P = provisional observed count. F = model forecast, not an observed count.
-              Bars show relative annual totals; no uncertainty interval is available.
-            </p>
-          </div>
+          <ForecastInteractiveChart
+            history={history}
+            forecast={{ year: forecast.forecast_year, total: forecast.predicted_accidents }}
+          />
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr]">
             <div className="rounded-2xl border border-white/10 p-5">
