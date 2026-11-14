@@ -63,6 +63,29 @@ python -m unittest discover -s ingestion/tests -v
 See [district research staging guide](docs/tn_district_research_staging.md)
 for data sources, digest controls, limitations, and the next release gate.
 
+## Live Tamil Nadu environmental context (city weather, not accident risk)
+
+A new **/conditions** page and `GET /api/v1/conditions/live?city=Chennai`
+endpoint retrieve current Open-Meteo weather-grid estimates and upcoming
+hourly weather for six verified Tamil Nadu city-centre coordinates.
+Current time, provider age, precipitation, visibility, wind, humidity,
+temperature and day/night are shown. The page also links to official
+IMD district weather warnings.
+
+Live geocoded accident incidents and licensed traffic flow data are **not
+available in this integration**; the response returns `null` for missing
+values. **No accident risk probability, danger ranking or machine-learning
+feature training is claimed.** Current Tamil Nadu district accident totals are
+annual and unsuitable for hour-by-hour calibrated risk labels.
+
+```powershell
+docker compose up -d --build api web
+```
+
+Open `http://localhost:3000/conditions` and choose a city. The API returns
+503 if the weather feed is missing or stale, never synthetic sunny weather.
+See [verified sources and next ML prerequisites](docs/live_tn_conditions_data_sources.md).
+
 ## Published accident-count verification (2021–2023)
 
 A separate Firecrawl-assisted, publication-to-publication audit compared
