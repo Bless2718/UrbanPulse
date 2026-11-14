@@ -15,7 +15,7 @@ const sections = [
 export default function SiteNav({ active = "dashboard" }: Props) {
   return (
     <header className="urban-nav-shell sticky top-0 z-40 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1470px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:flex-nowrap sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[1470px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 lg:flex-nowrap sm:px-6 lg:px-8">
         <Link
           href="/"
           className="inline-flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
@@ -33,7 +33,7 @@ export default function SiteNav({ active = "dashboard" }: Props) {
         </Link>
 
         <nav aria-label="Main navigation"
-          className="urban-nav-pill flex w-full items-center gap-1 overflow-x-auto rounded-2xl p-1 sm:w-auto">
+          className="urban-nav-pill flex w-full min-w-0 items-center gap-1 overflow-x-auto rounded-2xl p-1 lg:w-auto">
           {sections.map(({ id, href, label, short, icon: Icon }) => (
             <Link key={id} href={href} aria-label={label}
               aria-current={active === id ? "page" : undefined}
