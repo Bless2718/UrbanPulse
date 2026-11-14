@@ -12,6 +12,7 @@ import {
 
 import SiteNav from "@/components/SiteNav";
 import DistrictAccidentComparison from "@/components/DistrictAccidentComparison";
+import StatewideForecastPanel, { type StatewideForecast } from "@/components/StatewideForecastPanel";
 
 type Weather = {
   station_name: string | null;
@@ -72,12 +73,13 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export default async function Home() {
-  const [weather, accidents, trend, forecast, tamilNaduAnnual] = await Promise.all([
+  const [weather, accidents, trend, forecast, tamilNaduAnnual, statewideForecast] = await Promise.all([
     fetchJson<Weather>("/api/v1/weather/current"),
     fetchJson<AccidentSummary>("/api/v1/accidents/summary"),
     fetchJson<AccidentTrend[]>("/api/v1/accidents/trend"),
     fetchJson<AccidentForecast>("/api/v1/accidents/forecast"),
     fetchJson<TamilNaduAnnual>("/api/v1/accidents/tamil-nadu/annual"),
+    fetchJson<StatewideForecast>("/api/v1/predictions/tamil-nadu/annual"),
   ]);
 
   const tnRecent = (tamilNaduAnnual?.records ?? []).slice(-8);
@@ -291,6 +293,11 @@ export default async function Home() {
             )}
           </div>
         </section>
+
+        <StatewideForecastPanel
+          forecast={statewideForecast}
+          history={tamilNaduAnnual?.records ?? []}
+        />
 
         <DistrictAccidentComparison />
 
