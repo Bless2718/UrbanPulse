@@ -50,7 +50,7 @@ export default function AccidentTrendPanel({ trend, forecast }: Props) {
   const points = observed.map((row, i) => ({ ...row, x: x(i), y: y(row.total_accidents) }));
   // Separate filled regions at missing years too, so the cyan area
   // never implies that an unobserved year was measured.
-  const areaGroups: typeof points[] = [];
+  const areaGroups: Array<typeof points> = [];
   for (const point of points) {
     let group = areaGroups[areaGroups.length - 1];
     if (!group || point.year !== group[group.length - 1].year + 1) {
