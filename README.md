@@ -2,6 +2,32 @@
 
 UrbanPulse is an end-to-end portfolio project combining **Data Engineering, Data Analytics and Data Science** around urban road-accident intelligence.
 
+## Forecasting focus and data coverage
+
+UrbanPulse is an **accident forecasting project**. Its primary validated workflow is
+historical backtesting followed by an **experimental 2026 Tamil Nadu statewide
+annual accident forecast**. It is not a validated district-level or hourly
+accident-probability predictor.
+
+- **Statewide history:** 1993–2025 (2024–2025 provisional); 2026 experimental
+  persistence forecast stored in `analytics.tn_statewide_forecasts`.
+- **Statewide forecast API:** `GET /api/v1/predictions/tamil-nadu/annual`.
+- **District history:** 2021–2023 in `analytics.tn_district_accidents`;
+  district/city reporting jurisdictions may differ across years.
+- **District Forecast Lab:** `http://localhost:3000/forecast/districts` combines
+  historical district comparison, reporting coverage, and user-adjustable
+  2026 what-if scenarios. **These scenarios are arithmetic illustrations, not
+  trained or validated ML forecasts.** A longer consistent district history
+  and chronological backtesting are required before real district predictions.
+
+To generate or refresh the statewide forecast, set `DATABASE_URL` and run
+`python ml/training/train_tn_statewide.py` after importing the statewide annual
+dataset. This script requires data through 2025.
+
+The legacy 1998–2025 accident source described below is a **different dataset
+with different scope**; do not compare its forecast totals directly with the
+Tamil Nadu statewide forecast.
+
 ## Current pipeline
 
 ```text
