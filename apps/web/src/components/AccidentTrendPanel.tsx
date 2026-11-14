@@ -141,6 +141,19 @@ export default function AccidentTrendPanel({ trend, forecast }: Props) {
                   </text>
                 </g>
               ))}
+              {points.length > 0 && (
+                <g>
+                  <rect x={Math.max(l, points[points.length - 1].x - 72)}
+                    y={Math.max(4, points[points.length - 1].y - 45)}
+                    width="72" height="27" rx="7" fill="#021526"
+                    stroke="#03d9ee" strokeWidth="1.1" />
+                  <text x={Math.max(l, points[points.length - 1].x - 72) + 36}
+                    y={Math.max(4, points[points.length - 1].y - 45) + 18}
+                    fill="#f0fdff" fontSize="13" fontWeight="600" textAnchor="middle">
+                    {formatCount(points[points.length - 1].total_accidents)}
+                  </text>
+                </g>
+              )}
               {showForecast && forecast && (
                 <>
                   <path d={"M " + points[points.length - 1].x + " " + points[points.length - 1].y +
