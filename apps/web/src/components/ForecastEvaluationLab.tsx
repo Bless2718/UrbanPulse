@@ -21,7 +21,7 @@ const label = (c: EvaluationCandidate) => c.candidate_id.replaceAll("_", " ") +
 
 function SmallCard({ title, value, detail }: { title: string; value: string; detail: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+    <div className="urban-panel urban-metric-card relative overflow-hidden p-5">
       <p className="text-xs uppercase tracking-[0.13em] text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
       <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p>
@@ -43,7 +43,7 @@ function HistoricalChart({ rows, name }: { rows: EvaluationFold[]; name: string 
   const actualLine = ordered.map((p, i) => (i ? "L" : "M") + x(i) + "," + y(p.actual)).join(" ");
   const predictedLine = ordered.map((p, i) => (i ? "L" : "M") + x(i) + "," + y(p.prediction)).join(" ");
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/40 p-3" tabIndex={0}
+    <div className="urban-chart-surface overflow-x-auto rounded-2xl p-3" tabIndex={0}
       aria-label={"Scrollable held-out year chart for " + name}>
       <svg viewBox={"0 0 " + w + " " + h} className="w-full min-w-[510px]" role="img"
         aria-label={name + ": reported accident counts and experimental predictions for historical holdout years"}>
@@ -92,7 +92,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
       && f.candidate_type === chosen.candidate_type && f.horizon === horizon && f.method === m)),
   }));
   return <div className="mt-7 space-y-6">
-    <section role="note" className="rounded-2xl border border-amber-300/25 bg-amber-300/[0.045] p-5">
+    <section role="note" className="urban-research-notice p-5">
       <div className="flex items-start gap-3">
         <ShieldAlert className="mt-1 h-6 w-6 shrink-0 text-amber-300"/>
         <div>
@@ -106,7 +106,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
       </div>
     </section>
 
-    <section className="rounded-2xl border border-cyan-400/15 bg-cyan-400/[0.035] p-5" aria-label="Published data crosscheck">
+    <section className="urban-panel urban-confirm-card p-5" aria-label="Published data crosscheck">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-cyan-300" />
@@ -140,7 +140,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
         detail={"Later statewide count; +" + report.source_revision_death_gap + " deaths"}/>
     </div>
 
-    <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7">
+    <section className="urban-panel urban-chart-panel p-5 sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
@@ -160,7 +160,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
         <div>
           <label htmlFor="evaluation-candidate" className="mb-2 block text-xs text-slate-400">Reporting area / group</label>
           <select id="evaluation-candidate" value={selection} onChange={(e) => setSelection(e.target.value)}
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-sm text-white">
+            className="urban-select w-full rounded-xl px-4 py-3 text-sm text-white">
             <optgroup label="Original reporting areas">
               {candidates.filter((c) => c.candidate_type === "original_reporting_area").map((c) =>
                 <option key={c.candidate_id} value={c.candidate_type + ":" + c.candidate_id}>
@@ -179,14 +179,14 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
           <label htmlFor="evaluation-horizon" className="mb-2 block text-xs text-slate-400">Historical horizon</label>
           <select id="evaluation-horizon" value={horizon}
             onChange={(e) => setHorizon(Number(e.target.value) as ForecastHorizon)}
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-sm text-white">
+            className="urban-select w-full rounded-xl px-4 py-3 text-sm text-white">
             <option value={1}>1 year ahead</option><option value={2}>2 years ahead</option>
           </select>
         </div>
         <div>
           <label htmlFor="evaluation-method" className="mb-2 block text-xs text-slate-400">Baseline method</label>
           <select id="evaluation-method" value={method} onChange={(e) => setMethod(e.target.value as ForecastMethod)}
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-sm text-white">
+            className="urban-select w-full rounded-xl px-4 py-3 text-sm text-white">
             {METHODS.map((m) => <option key={m} value={m}>{METHOD_LABELS[m]}</option>)}
           </select>
         </div>
@@ -239,7 +239,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
     </section>
 
     <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-      <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7">
+      <section className="urban-panel urban-chart-panel p-5 sm:p-7">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
           <BarChart3 className="h-4 w-4"/> Baseline comparison
         </div>
@@ -270,7 +270,7 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
           Each fold uses at least four consecutive training years and never trains on the test year.
         </p>
       </section>
-      <aside className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 sm:p-7">
+      <aside className="urban-panel urban-chart-panel p-5 sm:p-7">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300">
           <Database className="h-4 w-4"/> Data provenance
         </div>

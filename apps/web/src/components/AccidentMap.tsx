@@ -184,7 +184,7 @@ export default function AccidentMap({ locations, displayYear }: Props) {
 
   if (locations.length === 0) {
     return (
-      <div className="flex h-[620px] items-center justify-center rounded-3xl border border-white/10 bg-slate-950 text-sm text-slate-500">
+      <div className="urban-panel flex min-h-[450px] items-center justify-center text-sm text-slate-300">
         No validated location data available.
       </div>
     );
@@ -199,9 +199,9 @@ export default function AccidentMap({ locations, displayYear }: Props) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-cyan-950/20">
+    <div className="urban-panel urban-map-frame relative overflow-hidden shadow-2xl shadow-cyan-950/20">
       <div ref={containerRef} className="h-[620px] w-full" />
-      <div className="pointer-events-none absolute left-5 top-5 z-[500] rounded-full border border-white/10 bg-slate-950/90 px-4 py-2 text-xs font-medium text-slate-200 backdrop-blur">
+      <div className="urban-map-legend pointer-events-none absolute left-5 top-5 z-[500] rounded-full px-4 py-2 text-xs font-medium text-cyan-100 backdrop-blur">
         {displayYear == null
           ? "Marker size = combined 2020-2021 accidents"
           : `Marker size = ${displayYear} reported accidents`}

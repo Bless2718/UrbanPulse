@@ -1,9 +1,10 @@
 import Link from "next/link";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import { ArrowLeft, BarChart3, FlaskConical, ShieldAlert, Terminal } from "lucide-react";
+import { ArrowLeft, BarChart3, FlaskConical, ShieldAlert, Terminal, Database } from "lucide-react";
 
 import SiteNav from "@/components/SiteNav";
+import NeonPageHero from "@/components/NeonPageHero";
 import ForecastEvaluationLab from "@/components/ForecastEvaluationLab";
 import { parseEvaluationReport, type EvaluationReport } from "@/lib/forecastEvaluation";
 
@@ -47,32 +48,39 @@ async function readResearchReport(): Promise<LoadResult> {
 export default async function ForecastEvaluationPage() {
   const result = await readResearchReport();
   return (
-    <main className="min-h-screen">
+    <main className="urban-shell urban-subpage min-h-screen">
       <SiteNav active="evaluation" />
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <Link href="/forecast/districts"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white">
-          <ArrowLeft className="h-4 w-4" /> Back to district lab
+      <div className="relative z-[1] mx-auto max-w-[1470px] px-4 py-7 sm:px-6 lg:px-8">
+        <Link href="/forecast/districts" className="urban-back-link inline-flex items-center gap-2 text-sm text-slate-300">
+          <ArrowLeft className="h-4 w-4" /> District Lab
         </Link>
-        <div className="mt-8 flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/[0.06] px-3 py-1.5 text-xs uppercase tracking-[0.16em] text-cyan-300">
-              <FlaskConical className="h-3.5 w-3.5" /> Phase 4 · Research dashboard
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">
-              Forecast Evaluation
-            </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-slate-400">
-              Understand how experimental accident-count baselines performed on held-out
-              historical years. Compare methods, investigate reporting limitations,
-              and see why none are approved as real-world forecasts.
-            </p>
-          </div>
-          <BarChart3 className="h-8 w-8 text-cyan-300" />
+        <div className="mt-5">
+          <NeonPageHero
+            eyebrow="Historical forecast intelligence"
+            title="Forecast"
+            accent="evaluation lab."
+            icon={BarChart3}
+            description="Explore real historical backtest results, compare experimental baseline errors, and inspect the evidence required before district forecasts can be approved."
+            spotlightLabel="Data provenance"
+            spotlightTitle="Historical results, not live risk"
+            spotlightText="Every chart uses held-out accident counts from research-only experiments, with 2024 revision and district geography warnings retained."
+            spotlightIcon={Database}
+          />
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Link href="/forecast/districts" className="urban-action-link inline-flex items-center gap-2 px-4 py-2.5 text-sm">
+            <FlaskConical className="h-4 w-4" /> District scenario explorer
+          </Link>
+          <Link href="/conditions" className="urban-action-link inline-flex items-center gap-2 px-4 py-2.5 text-sm">
+            Live weather context
+          </Link>
+          <span className="urban-evidence-pill inline-flex items-center px-3 py-2 text-xs text-cyan-100">
+            No forecast published from this report
+          </span>
         </div>
 
         {result.status === "ready" ? <ForecastEvaluationLab report={result.report} /> : (
-          <section className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/[0.035] p-6 sm:p-8">
+          <section className="urban-panel urban-research-notice mt-8 p-6 sm:p-8">
             <div className="flex items-start gap-3">
               {result.status === "invalid" ?
                 <ShieldAlert className="mt-1 h-6 w-6 text-amber-300"/> :
