@@ -79,8 +79,9 @@ export function parseEvaluationReport(input: unknown): EvaluationReport {
     && Array.isArray(input.excluded_years)
     && input.excluded_years.length === 1 && input.excluded_years[0] === 2024,
   "2024 exclusion not declared");
-  assertSafe(Array.isArray(input.methods) && input.methods.length === 3
-    && methods.every((x) => input.methods!.includes(x)), "method list changed");
+  const listedMethods = input.methods;
+  assertSafe(Array.isArray(listedMethods) && listedMethods.length === 3
+    && methods.every((x) => listedMethods.includes(x)), "method list changed");
   assertSafe(Array.isArray(input.horizons) && input.horizons.length === 2
     && input.horizons.includes(1) && input.horizons.includes(2), "horizon list changed");
   assertSafe(input.min_training_years === 4, "training window rule changed");
@@ -149,12 +150,13 @@ export function parseEvaluationReport(input: unknown): EvaluationReport {
     assertSafe(isInt(raw.origin_year, 2019, 2022) && isInt(raw.target_year, 2020, 2023)
       && raw.target_year === raw.origin_year + raw.horizon, "fold is not a historical holdout");
     assertSafe(isCount(raw.actual) && isCount(raw.prediction), "invalid accident count");
-    assertSafe(isYearArray(raw.training_years) && raw.training_years.length >= 4
-      && raw.training_years[raw.training_years.length - 1] === raw.origin_year
-      && raw.training_years.every((y, i) => i === 0 || y === raw.training_years[i-1] + 1),
+    const trainingYears = raw.training_years;
+    assertSafe(isYearArray(trainingYears) && trainingYears.length >= 4
+      && trainingYears[trainingYears.length - 1] === raw.origin_year
+      && trainingYears.every((y, i) => i === 0 || y === trainingYears[i - 1] + 1),
     "chronological training history invalid");
     assertSafe(Array.isArray(raw.training_source_row_sha256)
-      && raw.training_source_row_sha256.length >= raw.training_years.length
+      && raw.training_source_row_sha256.length >= trainingYears.length
       && raw.training_source_row_sha256.every((h) => typeof h === "string" && hashPattern.test(h)),
     "missing training provenance");
     assertSafe(Array.isArray(raw.holdout_source_row_sha256)
