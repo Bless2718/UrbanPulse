@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, BarChart3, Database, FlaskConical, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BarChart3, Database, FlaskConical, ShieldAlert, ShieldCheck } from "lucide-react";
 import {
   calculateFoldMetrics, type EvaluationCandidate, type EvaluationFold,
   type EvaluationReport, type ForecastHorizon, type ForecastMethod,
@@ -103,6 +103,31 @@ export default function ForecastEvaluationLab({ report }: { report: EvaluationRe
             42 candidates can be used for 2026 district forecasts or operational decisions.
           </p>
         </div>
+      </div>
+    </section>
+
+    <section className="rounded-2xl border border-cyan-400/15 bg-cyan-400/[0.035] p-5" aria-label="Published data crosscheck">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-cyan-300" />
+          <div>
+            <h2 className="font-semibold text-white">Published source counts cross-checked: 113 / 113</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+              The checked-in 2021–2023 district accident and death records match the published
+              OpenCity transcription exactly. This checks the copied numbers, <strong className="text-slate-200">not
+              historical district boundary consistency</strong> or prediction reliability.
+              The research warning above remains necessary.
+            </p>
+            <a href="https://data.opencity.in/dataset/tamil-nadu-road-accidents-reports/resource/764579ad-22e0-4f27-a694-34d0d2f843ea"
+              target="_blank" rel="noopener noreferrer"
+              className="mt-3 inline-block text-xs text-cyan-300 hover:text-white hover:underline">
+              View the published 2021–2023 reference
+            </a>
+          </div>
+        </div>
+        <span className="rounded-full border border-cyan-400/20 px-3 py-1.5 text-xs text-cyan-200">
+          Transcription checked · geography pending
+        </span>
       </div>
     </section>
 
