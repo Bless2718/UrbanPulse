@@ -36,6 +36,46 @@ def districts(year: int = Query(default=2023, ge=2021, le=2023)):
             "is_ml_prediction": False, "records": rows}
 
 
+@router.get("/district-intelligence")
+def district_intelligence():
+    """Historical reporting-area observations, with explicit coverage metadata.
+
+    Totals across reporting jurisdictions are not asserted to equal the
+    independently sourced Tamil Nadu statewide annual series.
+    """
+    rows = fetch("""
+        SELECT district, year, total_accidents, total_deaths, source_url
+        FROM analytics.tn_district_accidents
+        ORDER BY year, district
+    """)
+    years = sorted({int(row["year"]) for row in rows})
+    coverage = [
+        {
+            "year": year,
+            "reporting_areas": sum(1 for row in rows if row["year"] == year),
+        }
+        for year in years
+    ]
+    return {
+        "geography": "Tamil Nadu districts and reporting jurisdictions",
+        "granularity": "reporting_area_year",
+        "metric_definitions": {
+            "total_accidents": "reported accident count",
+            "total_deaths": "reported deaths",
+        },
+        "is_ml_prediction": False,
+        "available_years": years,
+        "coverage_by_year": coverage,
+        "reporting_areas": len({row["district"] for row in rows}),
+        "records": rows,
+        "note": (
+            "Reporting jurisdictions may include cities as well as districts. "
+            "Counts are not exposure-adjusted risks and must not be combined "
+            "with the separate statewide series. No location-level forecast."
+        ),
+    }
+
+
 @router.get("/district-trend")
 def district_trend(district: str = Query(min_length=2, max_length=100)):
     rows = fetch("""
