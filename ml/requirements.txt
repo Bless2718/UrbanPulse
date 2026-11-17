@@ -1,4 +1,6 @@
 numpy==2.2.3
 pandas==2.2.3
 pg8000==1.31.5
+# pg8000 1.31.5 calls scramp.make_channel_binding, removed in scramp 1.5.0.
+scramp==1.4.18
 scikit-learn==1.6.1
