@@ -333,6 +333,18 @@ body {
   background: linear-gradient(120deg, #061e34, #06182e);
   box-shadow: inset 0 1px 4px rgba(0, 206, 252, .09);
 }
+/* Native select menus can be drawn by the OS with a LIGHT popup even while
+   the closed field is dark. Give every option its own contrasting foreground
+   and background instead of inheriting the field's white text. This keeps
+   every city/area/model option readable in Chrome/Edge on Windows. */
+.urban-select option,
+.urban-select optgroup {
+  color: #0c2239;
+  background-color: #f4f9ff;
+}
+.urban-select option:disabled {
+  color: #596b7c;
+}
 .urban-select:focus-visible,
 .urban-subpage input:focus-visible,
 .urban-primary-button:focus-visible,
